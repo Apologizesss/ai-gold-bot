@@ -1,0 +1,164 @@
+================================================================================
+🚨 HOW TO ENABLE ALGO TRADING IN MT5 🚨
+================================================================================
+
+ERROR YOU'RE SEEING:
+  "Terminal: Authorization failed" (Error code: -6)
+
+THE FIX (Takes 5 seconds):
+  Enable the "Algo Trading" button in MetaTrader 5
+
+================================================================================
+
+📍 WHERE TO FIND THE ALGO TRADING BUTTON:
+================================================================================
+
+Open MetaTrader 5 and look at the TOOLBAR (below the menu bar):
+
+   File  View  Insert  Charts  Tools  Window  Help
+   ┌────────────────────────────────────────────────────────┐
+   │  [📁] [💾] [🖨️] [📊] [📈] [🔍] [🤖] ← FIND THIS ONE!  │
+   └────────────────────────────────────────────────────────┘
+                                    ↑
+                              ALGO TRADING
+                           (AutoTrading button)
+
+BUTTON NAMES (depends on your MT5 version):
+  • "Algo Trading"
+  • "AutoTrading"
+  • "Expert Advisors"
+  • Just a robot icon 🤖
+
+BUTTON STATUS:
+  🔴 RED or ⚫ GRAY    = DISABLED → Python API CANNOT connect
+  🟢 GREEN            = ENABLED  → Python API CAN connect
+
+================================================================================
+
+✅ STEPS TO ENABLE:
+================================================================================
+
+1. Open MetaTrader 5
+
+2. Find the Algo Trading button in the toolbar
+   (It's usually in the middle-right area of the toolbar)
+
+3. Click it ONCE to toggle it ON
+
+4. Verify it turned GREEN
+
+5. Done! Now run: python test_mt5_simple.py
+
+================================================================================
+
+⌨️ KEYBOARD SHORTCUTS:
+================================================================================
+
+Instead of clicking, you can press:
+  • Ctrl+E
+  • F8
+  (Try both - depends on your MT5 version)
+
+The button should turn green.
+
+================================================================================
+
+🔧 IF YOU DON'T SEE THE BUTTON:
+================================================================================
+
+Option 1: Right-click the toolbar
+  → Choose "Customize"
+  → Make sure "Algo Trading" is visible/enabled
+
+Option 2: Check menu instead
+  → Tools → Options → Expert Advisors
+  → ✅ Check "Allow algorithmic trading"
+  → Click OK
+  → Restart MT5
+  → Look for the button again
+
+================================================================================
+
+✅ HOW TO VERIFY IT'S ENABLED:
+================================================================================
+
+After clicking the button:
+
+1. The button should be HIGHLIGHTED/GREEN (not grayed out)
+
+2. You might see a message in the MT5 "Experts" log:
+   "Automated trading is allowed for this account/server"
+
+3. Run the test:
+
+   python test_mt5_simple.py
+
+   If you see:
+   ✅ SUCCESS! MT5 Connected!
+
+   → You're done! It's working!
+
+================================================================================
+
+❓ STILL NOT WORKING?
+================================================================================
+
+If the button is GREEN but Python still can't connect:
+
+1. Check Tools → Options → Expert Advisors
+   Make sure these are ALL checked:
+   ✅ Allow algorithmic trading
+   ✅ Allow DLL imports
+   ✅ Allow imports of external experts
+
+2. Click OK and RESTART MT5
+
+3. Re-enable the green button (it might reset after restart)
+
+4. Make sure you're LOGGED IN to your account:
+   • Top-right corner should show: [Account Number] - [Server]
+   • Bottom-right should show green connection bars
+
+5. Run: python debug_mt5.py
+   (This gives detailed diagnostics)
+
+================================================================================
+
+💡 WHY THIS HAPPENS:
+================================================================================
+
+MetaTrader 5 blocks all external automation (including Python API) by default
+for security reasons. The Algo Trading button is a manual safety switch that
+you must enable to allow external programs to connect.
+
+Think of it like:
+  • Red button = "Door locked, nobody can enter"
+  • Green button = "Door open, Python can enter"
+
+================================================================================
+
+🎯 QUICK CHECKLIST:
+================================================================================
+
+Before running Python scripts, make sure:
+
+  ✅ MT5 is open
+  ✅ You're logged in to your account (top-right corner shows account)
+  ✅ Connection is active (bottom-right shows green bars)
+  ✅ Algo Trading button is GREEN
+  ✅ Tools → Options → Expert Advisors → "Allow algorithmic trading" is checked
+
+================================================================================
+
+📞 NEXT STEP AFTER FIXING:
+================================================================================
+
+Run this to verify it works:
+
+  python test_mt5_simple.py
+
+If you see "✅ SUCCESS! MT5 Connected!" → You're ready to proceed!
+
+Then continue with: QUICK_START.md → Step 4 (Data Collection)
+
+================================================================================

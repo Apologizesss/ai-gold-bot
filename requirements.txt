@@ -1,0 +1,191 @@
+# AI Gold Trading Bot - Python Dependencies
+# Installation: pip install -r requirements.txt
+# Updated for Python 3.9-3.11 compatibility
+
+# ============================================================================
+# AI/ML Libraries
+# ============================================================================
+tensorflow==2.18.0              # LSTM, CNN deep learning models (updated)
+xgboost==2.1.3                  # News impact scorer (gradient boosting)
+scikit-learn==1.6.1             # Random Forest, preprocessing, metrics
+transformers==4.47.1            # BERT sentiment analysis
+torch==2.5.1                    # PyTorch (alternative/additional)
+torchvision==0.20.1             # Image processing for CNN
+
+# ============================================================================
+# Trading Platform
+# ============================================================================
+MetaTrader5==5.0.5388      # MT5 Python API for trade execution (latest)
+
+# ============================================================================
+# Data Science & Analysis
+# ============================================================================
+pandas==2.2.3                   # Data manipulation and analysis
+numpy==1.26.4                   # Numerical computing (compatible with TF 2.18)
+matplotlib==3.10.0              # Plotting and visualization
+seaborn==0.13.2                 # Statistical data visualization
+plotly==5.24.1                  # Interactive charts
+mplfinance==0.12.10b0           # Candlestick charts (beta version)
+
+# ============================================================================
+# Technical Indicators
+# ============================================================================
+# TA-Lib==0.4.32                # Technical analysis library (install separately)
+pandas-ta==0.4.71b0             # Alternative technical indicators (latest beta)
+
+# ============================================================================
+# Data Collection
+# ============================================================================
+beautifulsoup4==4.12.3          # Web scraping (Forex Factory)
+selenium==4.27.1                # Browser automation for dynamic content
+requests==2.32.3                # HTTP requests
+yfinance==0.2.50                # Yahoo Finance data (DXY, VIX, SPY)
+newsapi-python==0.2.7           # News API client
+
+# ============================================================================
+# Database
+# ============================================================================
+sqlalchemy==2.0.36              # SQL toolkit and ORM
+# sqlite3 is built-in to Python
+
+# ============================================================================
+# Utilities
+# ============================================================================
+python-telegram-bot==21.9       # Telegram notifications
+schedule==1.2.2                 # Task scheduling
+python-dotenv==1.0.1            # Environment variable management
+loguru==0.7.3                   # Advanced logging
+tqdm==4.67.1                    # Progress bars
+joblib==1.4.2                   # Model serialization
+
+# ============================================================================
+# Image Processing (for CNN)
+# ============================================================================
+Pillow==11.0.0                  # Image manipulation
+opencv-python==4.10.0.84        # Computer vision
+
+# ============================================================================
+# Date/Time Handling
+# ============================================================================
+pytz==2024.2                    # Timezone calculations
+python-dateutil==2.9.0          # Date parsing
+
+# ============================================================================
+# Data Validation & Type Checking
+# ============================================================================
+pydantic==2.10.4                # Data validation
+typing-extensions==4.12.2       # Type hints support
+
+# ============================================================================
+# Testing
+# ============================================================================
+pytest==8.3.4                   # Unit testing framework
+pytest-cov==6.0.0               # Test coverage
+pytest-mock==3.14.0             # Mocking for tests
+
+# ============================================================================
+# Code Quality
+# ============================================================================
+black==24.10.0                  # Code formatter
+flake8==7.1.1                   # Linting
+pylint==3.3.2                   # Static analysis
+mypy==1.14.0                    # Type checking
+
+# ============================================================================
+# Jupyter Notebook (for development/analysis)
+# ============================================================================
+jupyter==1.1.1                  # Jupyter notebook
+ipykernel==6.29.5               # IPython kernel
+notebook==7.3.2                 # Notebook interface
+
+# ============================================================================
+# Performance & Optimization
+# ============================================================================
+numba==0.60.0                   # JIT compilation for speed
+# cython==3.0.11                # C extensions for Python (optional)
+
+# ============================================================================
+# Configuration
+# ============================================================================
+pyyaml==6.0.2                   # YAML config file parsing
+toml==0.10.2                    # TOML config parsing
+
+# ============================================================================
+# Web Framework (optional - for future dashboard)
+# ============================================================================
+flask==3.1.0                    # Lightweight web framework
+# dash==2.18.2                  # Dashboard creation (uncomment if needed)
+
+# ============================================================================
+# Additional ML Libraries (optional)
+# ============================================================================
+lightgbm==4.5.0                 # Alternative to XGBoost
+# catboost==1.2.7               # Another gradient boosting library
+statsmodels==0.14.4             # Statistical models
+scipy==1.14.1                   # Scientific computing
+
+# ============================================================================
+# Time Series (optional)
+# ============================================================================
+# prophet==1.1.6                # Facebook's time series forecasting
+# pmdarima==2.0.4               # Auto ARIMA
+
+# ============================================================================
+# Natural Language Processing
+# ============================================================================
+nltk==3.9.1                     # Natural language toolkit
+# spacy==3.8.3                  # Industrial NLP (large install)
+textblob==0.18.0                # Sentiment analysis
+
+# ============================================================================
+# Visualization Extras
+# ============================================================================
+bokeh==3.6.2                    # Interactive visualizations
+# altair==5.5.0                 # Declarative visualization
+
+# ============================================================================
+# Notes & Installation Instructions
+# ============================================================================
+#
+# INSTALLATION ORDER:
+# 1. pip install --upgrade pip
+# 2. pip install -r requirements.txt
+# 3. Install TA-Lib separately (see below)
+#
+# TA-LIB INSTALLATION (Windows):
+#   Download wheel from: https://www.lfd.uci.edu/~gohlke/pythonlibs/#ta-lib
+#   Choose file matching your Python version:
+#   - Python 3.9:  TA_Lib‑0.4.32‑cp39‑cp39‑win_amd64.whl
+#   - Python 3.10: TA_Lib‑0.4.32‑cp310‑cp310‑win_amd64.whl
+#   - Python 3.11: TA_Lib‑0.4.32‑cp311‑cp311‑win_amd64.whl
+#   Then: pip install TA_Lib‑0.4.32‑cpXX‑cpXX‑win_amd64.whl
+#
+# TA-LIB INSTALLATION (Mac):
+#   brew install ta-lib
+#   pip install TA-Lib
+#
+# TA-LIB INSTALLATION (Linux):
+#   sudo apt-get install ta-lib
+#   pip install TA-Lib
+#
+# TENSORFLOW GPU SUPPORT (if you have NVIDIA GPU):
+#   TensorFlow 2.18+ includes GPU support automatically
+#   Requires: CUDA 12.x and cuDNN 9.x
+#   Visit: https://www.tensorflow.org/install/gpu
+#
+# PYTHON VERSION COMPATIBILITY:
+#   Minimum: Python 3.9
+#   Recommended: Python 3.9, 3.10, or 3.11
+#   Python 3.12: Some packages may not be compatible yet
+#
+# TROUBLESHOOTING:
+#   If installation fails:
+#   1. pip install --upgrade pip setuptools wheel
+#   2. Try installing packages one by one
+#   3. Check Python version: python --version
+#   4. Use virtual environment: python -m venv venv
+#
+# OPTIONAL PACKAGES (commented out):
+#   Uncomment lines if you need specific features
+#   Some packages are large and may take time to install
+#

@@ -1,0 +1,324 @@
+# AI Gold Trading Bot - .gitignore
+# Exclude sensitive data, models, and temporary files from version control
+
+# ============================================================================
+# Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================================================
+# Virtual Environments
+# ============================================================================
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ============================================================================
+# IDEs
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================================
+# Jupyter Notebook
+# ============================================================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# ============================================================================
+# Environment Variables & Secrets (CRITICAL!)
+# ============================================================================
+.env
+.env.local
+.env.*.local
+config/.env
+config/secrets.yaml
+config/credentials.json
+*.key
+*.pem
+secrets/
+
+# API keys and credentials
+*_api_key.txt
+*_password.txt
+*_token.txt
+credentials.txt
+
+# ============================================================================
+# MetaTrader 5
+# ============================================================================
+*.ex5
+*.mq5
+MQL5/
+Bases/
+Experts/
+Indicators/
+Scripts/
+mt5_account.txt
+
+# ============================================================================
+# Trading Data (Large Files)
+# ============================================================================
+data/raw/*.csv
+data/raw/*.json
+data/raw/*.parquet
+data/processed/*.csv
+data/processed/*.parquet
+data/labels/*.csv
+
+# Keep directory structure but ignore contents
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/labels/*
+!data/labels/.gitkeep
+
+# ============================================================================
+# Trained Models (Large Files)
+# ============================================================================
+models/*.h5
+models/*.keras
+models/*.pkl
+models/*.joblib
+models/*.pt
+models/*.pth
+models/*.onnx
+models/*.pb
+models/checkpoints/
+models/saved_models/
+
+# Keep directory but ignore large model files
+models/*
+!models/.gitkeep
+!models/README.md
+
+# ============================================================================
+# Logs
+# ============================================================================
+logs/*.log
+logs/*.txt
+logs/*.out
+logs/*.err
+*.log
+
+# Keep logs directory structure
+logs/*
+!logs/.gitkeep
+
+# ============================================================================
+# Results & Reports
+# ============================================================================
+results/*.csv
+results/*.json
+results/*.html
+results/*.pdf
+results/backtest_results/
+results/performance_charts/
+results/trade_history/
+
+# Keep results directory structure
+results/*
+!results/.gitkeep
+
+# ============================================================================
+# Database Files
+# ============================================================================
+*.db
+*.sqlite
+*.sqlite3
+trading.db
+backtest.db
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+*.tmp
+*.temp
+*.cache
+.cache/
+tmp/
+temp/
+
+# ============================================================================
+# Testing
+# ============================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ============================================================================
+# Documentation Build
+# ============================================================================
+docs/_build/
+docs/_static/
+docs/_templates/
+site/
+
+# ============================================================================
+# OS-Specific
+# ============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================================================
+# Backup Files
+# ============================================================================
+*.bak
+*.backup
+*.old
+*_backup.*
+backup/
+backups/
+
+# ============================================================================
+# Chart Images (Generated)
+# ============================================================================
+charts/*.png
+charts/*.jpg
+charts/*.jpeg
+images/generated/
+
+# ============================================================================
+# Large Binary Files
+# ============================================================================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# ============================================================================
+# Sensitive Trading Information
+# ============================================================================
+trades.csv
+positions.csv
+account_history.csv
+trade_journal.txt
+broker_statements/
+
+# ============================================================================
+# Configuration Overrides
+# ============================================================================
+config/local.yaml
+config/override.yaml
+config/production.yaml
+
+# ============================================================================
+# Package Management
+# ============================================================================
+poetry.lock
+Pipfile.lock
+pdm.lock
+
+# ============================================================================
+# GPU/CUDA
+# ============================================================================
+*.cu
+*.cuh
+
+# ============================================================================
+# Profiling
+# ============================================================================
+*.prof
+*.lprof
+profile_output.*
+
+# ============================================================================
+# Keep These Files (Important!)
+# ============================================================================
+!.gitignore
+!README.md
+!LICENSE
+!requirements.txt
+!setup.py
+!pyproject.toml
+!CHANGELOG.md
+!TODO.md
+!PROJECT_STATUS.md
+
+# Keep example/template files
+!config/.env.example
+!config/config.example.yaml
+!data/README.md
+!models/README.md
+!logs/README.md
+!results/README.md
+
+# Keep source code
+!src/**/*.py
+!scripts/**/*.py
+!tests/**/*.py
+!notebooks/**/*.ipynb
+
+# ============================================================================
+# Project-Specific
+# ============================================================================
+# Ignore trained model weights but keep architecture code
+model_weights/
+checkpoints/
+
+# Ignore large datasets but keep samples
+data/samples/*
+!data/samples/sample_*.csv
+
+# Ignore personal notes
+notes.txt
+personal_notes/
+TODO_personal.md
+
+# ============================================================================
+# End of .gitignore
+# ============================================================================
