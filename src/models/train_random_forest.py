@@ -12,6 +12,10 @@ Features:
 - Out-of-bag (OOB) score estimation
 """
 
+import matplotlib
+
+matplotlib.use("Agg")  # Set non-interactive backend to prevent figure windows
+
 import sys
 from pathlib import Path
 import pandas as pd

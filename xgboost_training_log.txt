@@ -1,0 +1,44 @@
+======================================================================
+XGBOOST TRADING MODEL TRAINER
+======================================================================
+
+Data: data/raw/XAUUSD_H1_20251101_172515_advanced_features_with_target.csv
+Test size: 20%
+
+
+======================================================================
+TRAINING PROCESS
+======================================================================
+
+Loading data...
+  Loaded 2,757 rows, 71 columns
+  Found 67 features
+  Target distribution:
+    DOWN: 1,338/2,757 (48.5%)
+    UP: 1,419/2,757 (51.5%)
+
+Splitting data...
+  Train: 2,205 samples (51.5% UP)
+  Test:  552 samples (51.4% UP)
+
+Scaling features...
+
+Training XGBoost model...
+
+  Class balance: 1070 DOWN, 1135 UP
+  scale_pos_weight: 0.94
+
+Traceback (most recent call last):
+  File "D:\TRADE\train_xgboost.py", line 450, in <module>
+    main()
+  File "D:\TRADE\train_xgboost.py", line 446, in main
+    model, metrics = trainer.train()
+                     ^^^^^^^^^^^^^^^
+  File "D:\TRADE\train_xgboost.py", line 401, in train
+    self.train_model(X_train_scaled, y_train, X_test_scaled, y_test)
+  File "D:\TRADE\train_xgboost.py", line 154, in train_model
+    self.model.fit(
+  File "D:\TRADE\venv\Lib\site-packages\xgboost\core.py", line 774, in inner_f
+    return func(**kwargs)
+           ^^^^^^^^^^^^^^
+TypeError: XGBClassifier.fit() got an unexpected keyword argument 'early_stopping_rounds'

@@ -1,0 +1,269 @@
+{
+  "description": "Custom Parallel LSTM Training Experiments Configuration",
+  "version": "1.0",
+  "max_workers": null,
+  "comment": "Set max_workers to null for auto-detection, or specify a number",
+
+  "experiments": [
+    {
+      "name": "Baseline_M15",
+      "description": "Baseline 15-min timeframe (default)",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 60 --epochs 100"
+    },
+    {
+      "name": "Quick_Test_50",
+      "description": "Quick test with 50 epochs",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 60 --epochs 50"
+    },
+    {
+      "name": "Stacked_LSTM",
+      "description": "Deep stacked LSTM architecture",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --mode stacked --features 70 --epochs 100"
+    },
+    {
+      "name": "Attention_LSTM",
+      "description": "LSTM with attention mechanism",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --mode attention --features 70 --epochs 100"
+    },
+    {
+      "name": "Simple_LSTM",
+      "description": "Simple single-layer LSTM",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --mode simple --features 70 --epochs 100"
+    },
+    {
+      "name": "Features_50",
+      "description": "Top 50 most important features",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --features 50 --sequence-length 60 --epochs 100"
+    },
+    {
+      "name": "Features_100",
+      "description": "Top 100 features for more context",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --features 100 --sequence-length 60 --epochs 100"
+    },
+    {
+      "name": "Features_150",
+      "description": "Extended feature set (150 features)",
+      "enabled": true,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 150 --sequence-length 60 --epochs 100"
+    },
+    {
+      "name": "All_Features",
+      "description": "Use all available features",
+      "enabled": false,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 0 --sequence-length 60 --epochs 100"
+    },
+    {
+      "name": "Seq_30",
+      "description": "Short lookback window (30 candles)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 30 --epochs 100"
+    },
+    {
+      "name": "Seq_90",
+      "description": "Medium lookback window (90 candles)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 90 --epochs 100"
+    },
+    {
+      "name": "Seq_120",
+      "description": "Long lookback window (120 candles)",
+      "enabled": true,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 120 --epochs 100"
+    },
+    {
+      "name": "Seq_180",
+      "description": "Very long lookback (180 candles)",
+      "enabled": false,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 180 --epochs 100"
+    },
+    {
+      "name": "M5_Timeframe",
+      "description": "5-minute candles (more granular)",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --timeframe M5 --sequence-length 120 --epochs 100"
+    },
+    {
+      "name": "M30_Timeframe",
+      "description": "30-minute candles (medium-term)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --timeframe M30 --sequence-length 48 --epochs 100"
+    },
+    {
+      "name": "H1_Timeframe",
+      "description": "1-hour candles (less noise)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --timeframe H1 --sequence-length 60 --epochs 100"
+    },
+    {
+      "name": "H4_Timeframe",
+      "description": "4-hour candles (long-term trends)",
+      "enabled": true,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --timeframe H4 --sequence-length 30 --epochs 100"
+    },
+    {
+      "name": "D1_Timeframe",
+      "description": "Daily candles (very long-term)",
+      "enabled": false,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --timeframe D1 --sequence-length 20 --epochs 100"
+    },
+    {
+      "name": "Batch_32",
+      "description": "Small batch size for stability",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --batch-size 32 --epochs 100"
+    },
+    {
+      "name": "Batch_128",
+      "description": "Large batch size for speed",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --batch-size 128 --epochs 100"
+    },
+    {
+      "name": "Batch_256",
+      "description": "Very large batch (fastest)",
+      "enabled": false,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --batch-size 256 --epochs 100"
+    },
+    {
+      "name": "LR_0.0001",
+      "description": "Very low learning rate (careful training)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --learning-rate 0.0001 --epochs 150"
+    },
+    {
+      "name": "LR_0.0005",
+      "description": "Low learning rate (stable)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --learning-rate 0.0005 --epochs 150"
+    },
+    {
+      "name": "LR_0.002",
+      "description": "High learning rate (fast learning)",
+      "enabled": true,
+      "priority": "medium",
+      "command": "./venv/Scripts/python.exe train_models.py --learning-rate 0.002 --epochs 100"
+    },
+    {
+      "name": "LR_0.005",
+      "description": "Very high learning rate",
+      "enabled": false,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --learning-rate 0.005 --epochs 100"
+    },
+    {
+      "name": "Extended_150",
+      "description": "Extended training (150 epochs)",
+      "enabled": true,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --epochs 150"
+    },
+    {
+      "name": "Extended_200",
+      "description": "Very extended training (200 epochs)",
+      "enabled": true,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --epochs 200"
+    },
+    {
+      "name": "Extended_300",
+      "description": "Maximum training (300 epochs)",
+      "enabled": false,
+      "priority": "low",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --epochs 300"
+    },
+    {
+      "name": "Combo_Best",
+      "description": "Combination of best hyperparameters",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --features 100 --sequence-length 90 --batch-size 64 --learning-rate 0.0005 --epochs 150"
+    },
+    {
+      "name": "Combo_Fast",
+      "description": "Fast training combination",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --features 50 --sequence-length 30 --batch-size 128 --learning-rate 0.002 --epochs 80"
+    },
+    {
+      "name": "Combo_Stable",
+      "description": "Most stable configuration",
+      "enabled": true,
+      "priority": "high",
+      "command": "./venv/Scripts/python.exe train_models.py --features 70 --sequence-length 60 --batch-size 32 --learning-rate 0.0001 --epochs 200"
+    }
+  ],
+
+  "experiment_sets": {
+    "quick": {
+      "description": "Quick tests (4 experiments, ~20-30 min)",
+      "experiments": ["Quick_Test_50", "Stacked_LSTM", "Attention_LSTM", "Simple_LSTM"]
+    },
+    "features": {
+      "description": "Test different feature counts",
+      "experiments": ["Features_50", "Baseline_M15", "Features_100", "Features_150"]
+    },
+    "sequences": {
+      "description": "Test different lookback windows",
+      "experiments": ["Seq_30", "Baseline_M15", "Seq_90", "Seq_120"]
+    },
+    "timeframes": {
+      "description": "Test different timeframes",
+      "experiments": ["M5_Timeframe", "Baseline_M15", "M30_Timeframe", "H1_Timeframe", "H4_Timeframe"]
+    },
+    "hyperparams": {
+      "description": "Test batch sizes and learning rates",
+      "experiments": ["Batch_32", "Batch_128", "LR_0.0001", "LR_0.0005", "LR_0.002"]
+    },
+    "best": {
+      "description": "Best configurations only",
+      "experiments": ["Combo_Best", "Combo_Fast", "Combo_Stable", "Stacked_LSTM", "Attention_LSTM"]
+    },
+    "all_enabled": {
+      "description": "All enabled experiments",
+      "experiments": "auto"
+    }
+  },
+
+  "resource_limits": {
+    "max_memory_gb": null,
+    "max_disk_usage_percent": 90,
+    "min_free_memory_gb": 2
+  },
+
+  "notifications": {
+    "on_complete": false,
+    "on_failure": false,
+    "email": null
+  }
+}
