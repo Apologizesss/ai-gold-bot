@@ -1,0 +1,404 @@
+"""
+No Early Stopping Training Script
+===================================
+เทรน Model โดยไม่มี Early Stopping - ให้เทรนเต็มจำนวน epochs ที่กำหนด
+
+วิธีใช้:
+    python train_no_stop.py
+    python train_no_stop.py --epochs 200
+    python train_no_stop.py --epochs 300 --data data/processed/XAUUSD_H1_features_with_target_extended.csv
+"""
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import pickle
+from datetime import datetime
+import sys
+import argparse
+
+# Deep Learning
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix
+
+print("=" * 80)
+print("🔥 No Early Stopping Training Script")
+print("=" * 80)
+
+
+def load_data(data_path=None):
+    """โหลดข้อมูลที่มีอยู่"""
+    print("\n📂 กำลังโหลดข้อมูล...")
+
+    if data_path:
+        df = pd.read_csv(data_path)
+        print(f"✅ โหลดจาก: {data_path}")
+    else:
+        data_dir = Path("data/processed")
+
+        # ลองหาไฟล์ที่มี
+        possible_files = [
+            "XAUUSD_M5_features_with_target_extended.csv",
+            "XAUUSD_M15_features_with_target_extended.csv",
+            "XAUUSD_H1_features_with_target_extended.csv",
+            "XAUUSD_H4_features_with_target_extended.csv",
+            "XAUUSD_M15_features_with_target.csv",
+            "XAUUSD_H1_features_complete.csv",
+            "XAUUSD_M5_features_complete.csv",
+        ]
+
+        df = None
+        for filename in possible_files:
+            filepath = data_dir / filename
+            if filepath.exists():
+                print(f"✅ พบไฟล์: {filename}")
+                df = pd.read_csv(filepath)
+                break
+
+        if df is None:
+            # ลองใช้ไฟล์ที่สร้างจาก daily_update
+            recent_file = Path("data/processed_data_20251105.csv")
+            if recent_file.exists():
+                print(f"✅ พบไฟล์: {recent_file.name}")
+                df = pd.read_csv(recent_file)
+            else:
+                print("❌ ไม่พบไฟล์ข้อมูล!")
+                print("\n💡 แนะนำ: รัน collect_more_data.bat หรือ daily_update.bat")
+                sys.exit(1)
+
+    print(f"📊 โหลดข้อมูลสำเร็จ: {len(df)} แถว, {len(df.columns)} columns")
+    return df
+
+
+def prepare_data(df):
+    """เตรียมข้อมูลสำหรับเทรน"""
+    print("\n🔧 กำลังเตรียมข้อมูล...")
+
+    # สร้าง target ถ้ายังไม่มี
+    if "target" not in df.columns:
+        print("⚠️  ไม่พบ target column, กำลังสร้าง...")
+        df["future_price"] = df["close"].shift(-4)
+        df["target"] = (df["future_price"] > df["close"]).astype(int)
+
+    # กำจัด columns ที่ไม่ต้องการ
+    exclude_cols = [
+        "target",
+        "future_price",
+        "time",
+        "timestamp",
+        "symbol",
+        "timeframe",
+        "date",
+        "datetime",
+    ]
+
+    feature_cols = [col for col in df.columns if col not in exclude_cols]
+
+    # ลบ columns ที่เป็น object หรือ string
+    for col in feature_cols[:]:
+        if df[col].dtype == "object":
+            feature_cols.remove(col)
+            print(f"   ⚠️  ข้าม column: {col} (ประเภทข้อมูลไม่เหมาะสม)")
+
+    print(f"📊 จำนวน features: {len(feature_cols)}")
+
+    # เอาเฉพาะ columns ที่ต้องการ
+    X = df[feature_cols].copy()
+    y = df["target"].copy()
+
+    # ลบแถวที่มี NaN
+    mask = ~(X.isnull().any(axis=1) | y.isnull())
+    X = X[mask]
+    y = y[mask]
+
+    print(f"📊 ข้อมูลหลังทำความสะอาด: {len(X)} แถว")
+    print(f"📊 Target distribution: UP={y.sum()}, DOWN={len(y) - y.sum()}")
+    print(f"📊 Class balance: {y.sum() / len(y) * 100:.1f}% UP")
+
+    if len(X) < 100:
+        print("❌ ข้อมูลไม่เพียงพอ! (ต้องการอย่างน้อย 100 แถว)")
+        sys.exit(1)
+
+    return X, y, feature_cols
+
+
+def create_model(input_shape, units=128, dropout=0.3, layers_config=[128, 64, 32]):
+    """สร้าง LSTM model แบบ Deep"""
+    print("\n🤖 กำลังสร้าง Deep LSTM Model...")
+
+    model = keras.Sequential()
+
+    # Input layer
+    model.add(layers.Input(shape=input_shape))
+
+    # First LSTM layer (return sequences for stacking)
+    model.add(layers.LSTM(layers_config[0], return_sequences=True))
+    model.add(layers.Dropout(dropout))
+    model.add(layers.BatchNormalization())
+
+    # Second LSTM layer
+    model.add(layers.LSTM(layers_config[1], return_sequences=False))
+    model.add(layers.Dropout(dropout))
+    model.add(layers.BatchNormalization())
+
+    # Dense layers
+    model.add(layers.Dense(layers_config[2], activation="relu"))
+    model.add(layers.Dropout(dropout / 2))
+    model.add(layers.BatchNormalization())
+
+    model.add(layers.Dense(16, activation="relu"))
+    model.add(layers.Dropout(dropout / 2))
+
+    # Output layer
+    model.add(layers.Dense(1, activation="sigmoid"))
+
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
+        loss="binary_crossentropy",
+        metrics=["accuracy"],
+    )
+
+    print("✅ Model สร้างเสร็จแล้ว")
+    print(f"📊 Parameters: {model.count_params():,}")
+    print(f"📊 Architecture: {layers_config}")
+
+    return model
+
+
+def train_model(X, y, epochs=200, batch_size=32, validation_split=0.2):
+    """เทรน model แบบไม่มี Early Stopping"""
+    print("\n" + "=" * 80)
+    print("🔥 เริ่มการเทรน (NO EARLY STOPPING)")
+    print("=" * 80)
+    print(f"⚠️  Model จะเทรนเต็ม {epochs} epochs ไม่หยุดกลางคัน!")
+    print("=" * 80)
+
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    print(f"\n📊 Training set: {len(X_train)} แถว")
+    print(f"📊 Test set: {len(X_test)} แถว")
+
+    # Normalize
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    # Reshape for LSTM (samples, timesteps, features)
+    X_train_reshaped = X_train_scaled.reshape(
+        (X_train_scaled.shape[0], 1, X_train_scaled.shape[1])
+    )
+    X_test_reshaped = X_test_scaled.reshape(
+        (X_test_scaled.shape[0], 1, X_test_scaled.shape[1])
+    )
+
+    # Create model
+    model = create_model(input_shape=(1, X_train_scaled.shape[1]))
+
+    # Callbacks - เหลือแค่ ReduceLROnPlateau (ไม่มี EarlyStopping)
+    callbacks = [
+        keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss", factor=0.5, patience=15, verbose=1, min_lr=1e-7
+        ),
+        # ModelCheckpoint เพื่อเซฟ model ที่ดีที่สุด
+        keras.callbacks.ModelCheckpoint(
+            filepath="models/best_model_training.keras",
+            monitor="val_accuracy",
+            save_best_only=True,
+            verbose=1,
+        ),
+    ]
+
+    # Train
+    print(f"\n🔄 กำลังเทรนเต็ม {epochs} epochs...\n")
+
+    history = model.fit(
+        X_train_reshaped,
+        y_train,
+        epochs=epochs,
+        batch_size=batch_size,
+        validation_split=validation_split,
+        callbacks=callbacks,
+        verbose=1,
+    )
+
+    # Load best model
+    print("\n📂 โหลด best model...")
+    model = keras.models.load_model("models/best_model_training.keras")
+
+    # Evaluate
+    print("\n" + "=" * 80)
+    print("📊 ประเมินผล")
+    print("=" * 80)
+
+    train_loss, train_acc = model.evaluate(X_train_reshaped, y_train, verbose=0)
+    test_loss, test_acc = model.evaluate(X_test_reshaped, y_test, verbose=0)
+
+    print(f"\n✅ Training Accuracy: {train_acc * 100:.2f}%")
+    print(f"✅ Test Accuracy: {test_acc * 100:.2f}%")
+    print(f"📊 Accuracy Gap: {(train_acc - test_acc) * 100:.2f}%")
+
+    if (train_acc - test_acc) > 0.1:
+        print("⚠️  Model อาจ Overfit! (Training Acc สูงกว่า Test Acc มาก)")
+    elif test_acc > train_acc:
+        print("🎉 Model generalize ได้ดี! (Test Acc สูงกว่า Training Acc)")
+    else:
+        print("✅ Model สมดุลดี!")
+
+    # Predictions
+    y_pred_proba = model.predict(X_test_reshaped, verbose=0)
+    y_pred = (y_pred_proba > 0.5).astype(int).flatten()
+
+    print("\n📊 Classification Report:")
+    print(classification_report(y_test, y_pred, target_names=["DOWN", "UP"]))
+
+    print("\n📊 Confusion Matrix:")
+    cm = confusion_matrix(y_test, y_pred)
+    print(f"         Predicted")
+    print(f"         DOWN  UP")
+    print(f"Actual DOWN  {cm[0][0]:4d}  {cm[0][1]:4d}")
+    print(f"       UP    {cm[1][0]:4d}  {cm[1][1]:4d}")
+
+    # Training history summary
+    print("\n📈 Training History:")
+    print(
+        f"   Best Epoch: {history.history['val_accuracy'].index(max(history.history['val_accuracy'])) + 1}"
+    )
+    print(f"   Best Val Accuracy: {max(history.history['val_accuracy']) * 100:.2f}%")
+    print(f"   Final Val Accuracy: {history.history['val_accuracy'][-1] * 100:.2f}%")
+
+    return (
+        model,
+        scaler,
+        history,
+        {
+            "train_acc": train_acc,
+            "test_acc": test_acc,
+            "train_loss": train_loss,
+            "test_loss": test_loss,
+            "best_epoch": history.history["val_accuracy"].index(
+                max(history.history["val_accuracy"])
+            )
+            + 1,
+            "best_val_acc": max(history.history["val_accuracy"]),
+        },
+    )
+
+
+def save_model(model, scaler, feature_cols, metrics):
+    """บันทึก model"""
+    print("\n" + "=" * 80)
+    print("💾 กำลังบันทึก Model")
+    print("=" * 80)
+
+    # สร้างโฟลเดอร์
+    models_dir = Path("models")
+    models_dir.mkdir(exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # บันทึก model
+    model_path = models_dir / f"lstm_no_stop_{timestamp}.keras"
+    model.save(model_path)
+    print(f"✅ Model: {model_path}")
+
+    # บันทึก scaler
+    scaler_path = models_dir / f"scaler_no_stop_{timestamp}.pkl"
+    with open(scaler_path, "wb") as f:
+        pickle.dump(scaler, f)
+    print(f"✅ Scaler: {scaler_path}")
+
+    # บันทึก feature names
+    features_path = models_dir / f"features_no_stop_{timestamp}.pkl"
+    with open(features_path, "wb") as f:
+        pickle.dump(feature_cols, f)
+    print(f"✅ Features: {features_path}")
+
+    # บันทึก metadata
+    metadata = {
+        "timestamp": timestamp,
+        "train_accuracy": float(metrics["train_acc"]),
+        "test_accuracy": float(metrics["test_acc"]),
+        "train_loss": float(metrics["train_loss"]),
+        "test_loss": float(metrics["test_loss"]),
+        "best_epoch": int(metrics["best_epoch"]),
+        "best_val_accuracy": float(metrics["best_val_acc"]),
+        "num_features": len(feature_cols),
+        "model_file": str(model_path.name),
+        "scaler_file": str(scaler_path.name),
+        "features_file": str(features_path.name),
+    }
+
+    import json
+
+    metadata_path = models_dir / f"metadata_no_stop_{timestamp}.json"
+    with open(metadata_path, "w") as f:
+        json.dump(metadata, f, indent=4)
+    print(f"✅ Metadata: {metadata_path}")
+
+    print("\n" + "=" * 80)
+    print("✅ บันทึกเสร็จสมบูรณ์!")
+    print("=" * 80)
+
+    return model_path
+
+
+def main():
+    """ฟังก์ชันหลัก"""
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="No Early Stopping LSTM Training")
+    parser.add_argument("--data", type=str, default=None, help="ไฟล์ข้อมูล (optional)")
+    parser.add_argument(
+        "--epochs", type=int, default=200, help="จำนวน epochs (default: 200)"
+    )
+    parser.add_argument(
+        "--batch_size", type=int, default=32, help="Batch size (default: 32)"
+    )
+    parser.add_argument(
+        "--units", type=int, default=128, help="LSTM units (default: 128)"
+    )
+    args = parser.parse_args()
+
+    try:
+        # Load data
+        df = load_data(args.data)
+
+        # Prepare data
+        X, y, feature_cols = prepare_data(df)
+
+        # Train model
+        model, scaler, history, metrics = train_model(
+            X, y, epochs=args.epochs, batch_size=args.batch_size
+        )
+
+        # Save model
+        model_path = save_model(model, scaler, feature_cols, metrics)
+
+        # Summary
+        print("\n" + "🎉" * 40)
+        print("\n✅ การเทรนเสร็จสมบูรณ์!\n")
+        print(f"📊 Test Accuracy: {metrics['test_acc'] * 100:.2f}%")
+        print(f"📊 Best Val Accuracy: {metrics['best_val_acc'] * 100:.2f}%")
+        print(f"📊 Best Epoch: {metrics['best_epoch']}")
+        print(f"💾 Model saved: {model_path.name}")
+        print("\n💡 ขั้นตอนต่อไป:")
+        print("   1. รัน daily_update.bat เพื่ออัพเดทข้อมูล")
+        print("   2. รัน paper_trading.py เพื่อทดสอบเทรด")
+        print("   3. รัน live_trading.py เพื่อเทรดจริง")
+        print("\n" + "🎉" * 40 + "\n")
+
+    except Exception as e:
+        print(f"\n❌ เกิดข้อผิดพลาด: {e}")
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

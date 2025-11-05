@@ -1,0 +1,407 @@
+"""
+Daily Trading Update Script
+---------------------------
+สคริปต์สำหรับ:
+1. ดึงข้อมูลราคาใหม่จาก MT5
+2. วิเคราะห์ผลการเทรดย้อนหลัง 1 วัน
+3. Retrain model ด้วยข้อมูลใหม่
+4. สร้างรายงานประจำวัน
+
+วิธีใช้: python daily_update.py
+"""
+
+import MetaTrader5 as mt5
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import json
+import os
+from pathlib import Path
+import pickle
+
+# Import โมดูลที่มีอยู่
+from src.data_collection.mt5_collector import MT5Collector
+from src.features.feature_pipeline import FeaturePipeline
+from src.models.data_preprocessor import DataPreprocessor
+
+
+class DailyUpdater:
+    def __init__(self):
+        self.data_dir = Path("data")
+        self.results_dir = Path("results")
+        self.models_dir = Path("models")
+        self.logs_dir = Path("logs")
+
+        # สร้างโฟลเดอร์ถ้ายังไม่มี
+        for dir_path in [self.data_dir, self.results_dir, self.logs_dir]:
+            dir_path.mkdir(exist_ok=True)
+
+        self.symbol = "XAUUSD"
+        self.timeframe = mt5.TIMEFRAME_H1
+
+    def collect_new_data(self, days=7):
+        """ดึงข้อมูลใหม่จาก MT5"""
+        print("=" * 60)
+        print("📥 ขั้นตอนที่ 1: ดึงข้อมูลใหม่จาก MT5")
+        print("=" * 60)
+
+        collector = MT5Collector(symbol=self.symbol, timeframe="H1")
+
+        if not collector.initialize():
+            print("❌ ไม่สามารถเชื่อมต่อ MT5 ได้")
+            return None
+
+        if not collector.check_symbol():
+            print("❌ ไม่สามารถเข้าถึงสัญลักษณ์ได้")
+            mt5.shutdown()
+            return None
+
+        # ดึงข้อมูล 7 วันย้อนหลัง
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+
+        print(
+            f"ดึงข้อมูล {self.symbol} จาก {start_date.strftime('%Y-%m-%d')} ถึง {end_date.strftime('%Y-%m-%d')}"
+        )
+
+        df = collector.collect_historical_data(
+            date_from=start_date,
+            date_to=end_date,
+        )
+
+        mt5.shutdown()
+
+        if df is not None and len(df) > 0:
+            print(f"✅ ดึงข้อมูลสำเร็จ: {len(df)} แท่งเทียน")
+
+            # เปลี่ยนชื่อ column timestamp เป็น time สำหรับ FeaturePipeline
+            if "timestamp" in df.columns and "time" not in df.columns:
+                df = df.rename(columns={"timestamp": "time"})
+            elif "time" in df.columns and "timestamp" not in df.columns:
+                df["timestamp"] = df["time"]
+
+            # บันทึกข้อมูลดิบ
+            raw_file = (
+                self.data_dir / f"raw_data_{datetime.now().strftime('%Y%m%d')}.csv"
+            )
+            df.to_csv(raw_file, index=False)
+            print(f"💾 บันทึกไฟล์: {raw_file}")
+
+            return df
+        else:
+            print("❌ ไม่สามารถดึงข้อมูลได้")
+            return None
+
+    def analyze_trading_performance(self):
+        """วิเคราะห์ผลการเทรดจาก log files"""
+        print("\n" + "=" * 60)
+        print("📊 ขั้นตอนที่ 2: วิเคราะห์ผลการเทรด")
+        print("=" * 60)
+
+        # ค้นหา trading log files
+        log_files = list(self.logs_dir.glob("trading_*.json"))
+
+        if not log_files:
+            print("⚠️  ไม่พบไฟล์ log การเทรด")
+            return None
+
+        # รวม log ทั้งหมด
+        all_trades = []
+        for log_file in sorted(log_files)[-7:]:  # เอาแค่ 7 วันล่าสุด
+            try:
+                with open(log_file, "r", encoding="utf-8") as f:
+                    trades = json.load(f)
+                    all_trades.extend(trades)
+            except:
+                continue
+
+        if not all_trades:
+            print("⚠️  ไม่มีข้อมูลการเทรด")
+            return None
+
+        # คำนวณ metrics
+        df_trades = pd.DataFrame(all_trades)
+
+        if "profit" not in df_trades.columns:
+            print("⚠️  ข้อมูลไม่ครบถ้วน")
+            return None
+
+        total_trades = len(df_trades)
+        winning_trades = len(df_trades[df_trades["profit"] > 0])
+        losing_trades = len(df_trades[df_trades["profit"] < 0])
+
+        win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+
+        total_profit = df_trades["profit"].sum()
+        avg_profit = (
+            df_trades[df_trades["profit"] > 0]["profit"].mean()
+            if winning_trades > 0
+            else 0
+        )
+        avg_loss = (
+            df_trades[df_trades["profit"] < 0]["profit"].mean()
+            if losing_trades > 0
+            else 0
+        )
+
+        # คำนวณ Max Drawdown
+        cumulative_profit = df_trades["profit"].cumsum()
+        running_max = cumulative_profit.cummax()
+        drawdown = running_max - cumulative_profit
+        max_drawdown = drawdown.max() if len(drawdown) > 0 else 0
+
+        metrics = {
+            "total_trades": total_trades,
+            "winning_trades": winning_trades,
+            "losing_trades": losing_trades,
+            "win_rate": win_rate,
+            "total_profit": total_profit,
+            "avg_profit": avg_profit,
+            "avg_loss": avg_loss,
+            "max_drawdown": max_drawdown,
+            "profit_factor": abs(avg_profit / avg_loss) if avg_loss != 0 else 0,
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
+        # แสดงผล
+        print(f"\n📈 สรุปผลการเทรด (รวม {total_trades} ออเดอร์)")
+        print("-" * 60)
+        print(f"✅ ชนะ: {winning_trades} ครั้ง | ❌ แพ้: {losing_trades} ครั้ง")
+        print(f"🎯 Win Rate: {win_rate:.2f}%")
+        print(f"💰 กำไรรวม: ${total_profit:.2f}")
+        print(f"📊 กำไรเฉลี่ย: ${avg_profit:.2f} | ขาดทุนเฉลี่ย: ${avg_loss:.2f}")
+        print(f"⚠️  Max Drawdown: ${max_drawdown:.2f}")
+        print(f"📈 Profit Factor: {metrics['profit_factor']:.2f}")
+
+        # บันทึกผล
+        report_file = (
+            self.results_dir / f"daily_report_{datetime.now().strftime('%Y%m%d')}.json"
+        )
+        with open(report_file, "w", encoding="utf-8") as f:
+            json.dump(metrics, f, indent=4, ensure_ascii=False)
+        print(f"\n💾 บันทึกรายงาน: {report_file}")
+
+        return metrics
+
+    def prepare_training_data(self, df):
+        """เตรียมข้อมูลสำหรับเทรน"""
+        print("\n" + "=" * 60)
+        print("🔧 ขั้นตอนที่ 3: เตรียมข้อมูลสำหรับเทรน")
+        print("=" * 60)
+
+        # ตรวจสอบว่ามี column ที่จำเป็น
+        if "timestamp" not in df.columns and "time" in df.columns:
+            df["timestamp"] = df["time"]
+
+        print(f"📊 ข้อมูลดิบ: {len(df)} แถว, {len(df.columns)} columns")
+
+        # สร้าง features
+        pipeline = FeaturePipeline()
+        df_features = pipeline.add_features(df)
+
+        print(f"✅ สร้าง features เสร็จ: {len(df_features.columns)} features")
+
+        # สร้าง target (ราคาขึ้นใน 4 ชั่วโมงข้างหน้า)
+        df_features["future_price"] = df_features["close"].shift(-4)
+        df_features["target"] = (
+            df_features["future_price"] > df_features["close"]
+        ).astype(int)
+
+        print(f"📊 หลังสร้าง target: {len(df_features)} แถว")
+        print(f"   Missing values: {df_features.isnull().sum().sum()} จุด")
+
+        # ลบแถวที่ไม่มีข้อมูลเฉพาะ columns ที่สำคัญ
+        important_cols = ["open", "high", "low", "close", "target"]
+        df_features = df_features.dropna(subset=important_cols)
+
+        print(f"✅ เตรียมข้อมูลเสร็จ: {len(df_features)} แถว")
+
+        if len(df_features) > 0:
+            print(
+                f"📊 Target distribution: UP={df_features['target'].sum()}, DOWN={len(df_features) - df_features['target'].sum()}"
+            )
+        else:
+            print("⚠️  ไม่มีข้อมูลหลังจากทำความสะอาด")
+
+        # บันทึก
+        processed_file = (
+            self.data_dir / f"processed_data_{datetime.now().strftime('%Y%m%d')}.csv"
+        )
+        df_features.to_csv(processed_file, index=False)
+        print(f"💾 บันทึกไฟล์: {processed_file}")
+
+        return df_features
+
+    def update_existing_model(self, new_data):
+        """อัพเดท model ที่มีอยู่ด้วยข้อมูลใหม่"""
+        print("\n" + "=" * 60)
+        print("🤖 ขั้นตอนที่ 4: อัพเดท Model")
+        print("=" * 60)
+
+        # ค้นหา model ล่าสุด
+        model_files = list(self.models_dir.glob("lstm_model_*.keras"))
+
+        if not model_files:
+            print("⚠️  ไม่พบ model ที่มีอยู่")
+            print("💡 แนะนำ: รันคำสั่ง train_from_config.py เพื่อเทรน model ใหม่")
+            return False
+
+        latest_model = sorted(model_files)[-1]
+        print(f"📂 พบ model: {latest_model.name}")
+
+        try:
+            from tensorflow import keras
+
+            model = keras.models.load_model(latest_model)
+            print(f"✅ โหลด model สำเร็จ")
+
+            # เตรียมข้อมูล
+            exclude_cols = [
+                "target",
+                "future_price",
+                "time",
+                "timestamp",
+                "symbol",
+                "timeframe",
+            ]
+            feature_cols = [col for col in new_data.columns if col not in exclude_cols]
+
+            print(f"📊 จำนวน features สำหรับเทรน: {len(feature_cols)}")
+
+            X = new_data[feature_cols].values
+            y = new_data["target"].values
+
+            print(f"📊 ข้อมูลเทรน: X shape={X.shape}, y shape={y.shape}")
+
+            # Normalize
+            from sklearn.preprocessing import StandardScaler
+
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
+
+            # Reshape สำหรับ LSTM
+            X_scaled = X_scaled.reshape((X_scaled.shape[0], 1, X_scaled.shape[1]))
+
+            # Fine-tune model
+            print(f"🔄 กำลังอัพเดท model ด้วยข้อมูลใหม่...")
+            history = model.fit(
+                X_scaled, y, epochs=5, batch_size=32, validation_split=0.2, verbose=0
+            )
+
+            final_acc = history.history["accuracy"][-1]
+            final_val_acc = history.history["val_accuracy"][-1]
+
+            print(f"✅ อัพเดท model เสร็จสิ้น")
+            print(f"📊 Accuracy: {final_acc:.4f} | Val Accuracy: {final_val_acc:.4f}")
+
+            # บันทึก model ใหม่
+            new_model_name = (
+                f"lstm_model_updated_{datetime.now().strftime('%Y%m%d')}.keras"
+            )
+            new_model_path = self.models_dir / new_model_name
+            model.save(new_model_path)
+            print(f"💾 บันทึก model ใหม่: {new_model_name}")
+
+            return True
+
+        except Exception as e:
+            print(f"❌ เกิดข้อผิดพลาด: {e}")
+            print("💡 แนะนำ: รันคำสั่ง train_from_config.py เพื่อเทรน model ใหม่")
+            return False
+
+    def create_daily_summary(self, metrics):
+        """สร้างสรุปประจำวัน"""
+        print("\n" + "=" * 60)
+        print("📝 สร้างรายงานสรุปประจำวัน")
+        print("=" * 60)
+
+        summary = f"""
+╔════════════════════════════════════════════════════════════╗
+║           📊 รายงานประจำวัน - Gold Trading Bot           ║
+╠════════════════════════════════════════════════════════════╣
+║  วันที่: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}                        ║
+╠════════════════════════════════════════════════════════════╣
+"""
+
+        if metrics:
+            summary += f"""║  📈 ผลการเทรด                                             ║
+║     • จำนวนออเดอร์: {metrics["total_trades"]:>3} ครั้ง                           ║
+║     • ชนะ: {metrics["winning_trades"]:>3} | แพ้: {metrics["losing_trades"]:>3}                             ║
+║     • Win Rate: {metrics["win_rate"]:>6.2f}%                                ║
+║     • กำไรรวม: ${metrics["total_profit"]:>8.2f}                           ║
+║     • Max Drawdown: ${metrics["max_drawdown"]:>8.2f}                       ║
+║     • Profit Factor: {metrics["profit_factor"]:>5.2f}                             ║
+╠════════════════════════════════════════════════════════════╣
+"""
+
+        summary += f"""║  ✅ การอัพเดทข้อมูล                                       ║
+║     • ดึงข้อมูลใหม่จาก MT5                                ║
+║     • อัพเดท features และ indicators                      ║
+║     • Fine-tune model ด้วยข้อมูลใหม่                      ║
+╠════════════════════════════════════════════════════════════╣
+║  💡 คำแนะนำ                                                ║
+║     • ตรวจสอบ logs ในโฟลเดอร์ logs/                       ║
+║     • ดูรายงานเต็มในโฟลเดอร์ results/                     ║
+║     • Model อัพเดทล่าสุดอยู่ในโฟลเดอร์ models/            ║
+╚════════════════════════════════════════════════════════════╝
+"""
+
+        print(summary)
+
+        # บันทึกรายงาน
+        summary_file = (
+            self.results_dir / f"summary_{datetime.now().strftime('%Y%m%d')}.txt"
+        )
+        with open(summary_file, "w", encoding="utf-8") as f:
+            f.write(summary)
+
+        return summary
+
+    def run(self):
+        """รันกระบวนการทั้งหมด"""
+        print("\n" + "🚀" * 30)
+        print("           DAILY UPDATE SCRIPT - Gold Trading Bot")
+        print("🚀" * 30 + "\n")
+
+        try:
+            # 1. ดึงข้อมูลใหม่
+            df = self.collect_new_data(days=7)
+
+            # 2. วิเคราะห์ผลการเทรด
+            metrics = self.analyze_trading_performance()
+
+            # 3. เตรียมข้อมูลและ update model
+            if df is not None and len(df) > 0:
+                df_processed = self.prepare_training_data(df)
+
+                if df_processed is not None and len(df_processed) > 50:
+                    self.update_existing_model(df_processed)
+                elif df_processed is not None and len(df_processed) > 0:
+                    print(
+                        f"⚠️  ข้อมูลมีเพียง {len(df_processed)} แถว (ต้องการอย่างน้อย 50 แถว)"
+                    )
+                else:
+                    print("⚠️  ไม่มีข้อมูลหลังการเตรียม")
+
+            # 4. สร้างรายงาน
+            self.create_daily_summary(metrics)
+
+            print("\n" + "=" * 60)
+            print("✅ อัพเดทประจำวันเสร็จสมบูรณ์!")
+            print("=" * 60)
+
+        except Exception as e:
+            print(f"\n❌ เกิดข้อผิดพลาด: {e}")
+            import traceback
+
+            traceback.print_exc()
+
+
+def main():
+    """ฟังก์ชันหลัก"""
+    updater = DailyUpdater()
+    updater.run()
+
+
+if __name__ == "__main__":
+    main()
