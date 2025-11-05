@@ -114,8 +114,18 @@ class TradingInference:
                 print(f"MT5 initialization failed: {mt5.last_error()}")
                 return None
 
-            # Get rates
-            rates = mt5.copy_rates_from_pos(self.symbol, mt5.TIMEFRAME_H1, 0, bars)
+            # Get rates - use timeframe from initialization
+            timeframe_map = {
+                "M1": mt5.TIMEFRAME_M1,
+                "M5": mt5.TIMEFRAME_M5,
+                "M15": mt5.TIMEFRAME_M15,
+                "M30": mt5.TIMEFRAME_M30,
+                "H1": mt5.TIMEFRAME_H1,
+                "H4": mt5.TIMEFRAME_H4,
+                "D1": mt5.TIMEFRAME_D1,
+            }
+            mt5_timeframe = timeframe_map.get(self.timeframe, mt5.TIMEFRAME_M5)
+            rates = mt5.copy_rates_from_pos(self.symbol, mt5_timeframe, 0, bars)
 
             if rates is None or len(rates) == 0:
                 print(f"Failed to get rates: {mt5.last_error()}")

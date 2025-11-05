@@ -92,11 +92,11 @@ class LSTMTrainingPipeline:
         print("🧠 LSTM Training Pipeline Initialized")
         print("=" * 80)
         print(f"📂 Data: {self.data_path}")
-        print(f"📊 Sequence Length: {self.sequence_length}")
-        print(f"🎯 Prediction Horizon: {self.prediction_horizon}")
+        print(f"[Stats] Sequence Length: {self.sequence_length}")
+        print(f"[Target] Prediction Horizon: {self.prediction_horizon}")
         print(f"🔢 Batch Size: {self.batch_size}")
         print(f"🔁 Epochs: {self.epochs}")
-        print(f"📈 Learning Rate: {self.learning_rate}")
+        print(f"[Chart] Learning Rate: {self.learning_rate}")
         print(
             f"✨ Top Features: {self.use_top_features if self.use_top_features else 'All'}"
         )
@@ -106,7 +106,7 @@ class LSTMTrainingPipeline:
         """Load data and prepare features"""
         print("\n📥 Loading data...")
         self.df = pd.read_csv(self.data_path)
-        print(f"✅ Loaded {len(self.df):,} rows × {len(self.df.columns)} columns")
+        print(f"[OK] Loaded {len(self.df):,} rows × {len(self.df.columns)} columns")
 
         # Convert time column if exists
         if "time" in self.df.columns:
@@ -115,7 +115,7 @@ class LSTMTrainingPipeline:
 
         # Define feature selection based on importance
         if self.use_top_features:
-            print(f"\n🎯 Selecting top {self.use_top_features} features...")
+            print(f"\n[Target] Selecting top {self.use_top_features} features...")
             # Top features based on Phase C analysis
             top_features = [
                 "DONCH_lower",
@@ -214,10 +214,10 @@ class LSTMTrainingPipeline:
                 and self.df[col].dtype in ["float64", "int64"]
             ]
 
-        print(f"✅ Selected {len(self.feature_columns)} features")
+        print(f"[OK] Selected {len(self.feature_columns)} features")
 
         # Handle missing values
-        print("\n🔧 Handling missing values...")
+        print("\n[Feature Engineering] Handling missing values...")
         self.df[self.feature_columns] = (
             self.df[self.feature_columns]
             .fillna(method="ffill")
@@ -227,7 +227,7 @@ class LSTMTrainingPipeline:
 
         # Create target variable (price direction: 1=up, 0=down)
         if "target_binary" not in self.df.columns:
-            print("\n🎯 Creating target variable...")
+            print("\n[Target] Creating target variable...")
             self.df["future_close"] = self.df["close"].shift(-self.prediction_horizon)
             self.df["target_binary"] = (
                 self.df["future_close"] > self.df["close"]
@@ -236,7 +236,7 @@ class LSTMTrainingPipeline:
 
         # Check class balance
         target_counts = self.df["target_binary"].value_counts()
-        print(f"\n📊 Target Distribution:")
+        print(f"\n[Stats] Target Distribution:")
         print(
             f"   Down (0): {target_counts.get(0, 0):,} ({target_counts.get(0, 0) / len(self.df) * 100:.2f}%)"
         )
@@ -248,7 +248,7 @@ class LSTMTrainingPipeline:
 
     def create_sequences(self):
         """Create sequences for LSTM input"""
-        print("\n🔄 Creating sequences...")
+        print("\n[Reload] Creating sequences...")
 
         X = self.df[self.feature_columns].values
         y = self.df["target_binary"].values
@@ -269,7 +269,7 @@ class LSTMTrainingPipeline:
         X_seq = np.array(X_seq)
         y_seq = np.array(y_seq)
 
-        print(f"✅ Created {len(X_seq):,} sequences")
+        print(f"[OK] Created {len(X_seq):,} sequences")
         print(f"   Shape: {X_seq.shape} (samples, timesteps, features)")
 
         # Time-series split (no shuffle)
@@ -411,7 +411,7 @@ class LSTMTrainingPipeline:
 
     def train_model(self):
         """Train the LSTM model"""
-        print("\n🚀 Starting training...")
+        print("\n[Launch] Starting training...")
 
         # Callbacks
         early_stopping = callbacks.EarlyStopping(
@@ -450,13 +450,13 @@ class LSTMTrainingPipeline:
             verbose=1,
         )
 
-        print("\n✅ Training completed!")
+        print("\n[OK] Training completed!")
 
         return self
 
     def evaluate_model(self):
         """Evaluate model performance"""
-        print("\n📊 Evaluating model...")
+        print("\n[Stats] Evaluating model...")
 
         # Predictions
         y_train_pred = (
@@ -478,7 +478,7 @@ class LSTMTrainingPipeline:
         test_acc = accuracy_score(self.y_test, y_test_pred)
 
         print("\n" + "=" * 80)
-        print("🎯 PERFORMANCE METRICS")
+        print("[Target] PERFORMANCE METRICS")
         print("=" * 80)
         print(f"Train Accuracy: {train_acc:.4f} ({train_acc * 100:.2f}%)")
         print(f"Val Accuracy:   {val_acc:.4f} ({val_acc * 100:.2f}%)")
@@ -489,7 +489,7 @@ class LSTMTrainingPipeline:
             self.y_test, y_test_pred, average="binary"
         )
 
-        print(f"\n📈 Test Set Metrics:")
+        print(f"\n[Chart] Test Set Metrics:")
         print(f"   Precision: {precision:.4f}")
         print(f"   Recall:    {recall:.4f}")
         print(f"   F1-Score:  {f1:.4f}")
@@ -519,7 +519,7 @@ class LSTMTrainingPipeline:
 
     def plot_results(self):
         """Plot training history and results"""
-        print("\n📊 Generating plots...")
+        print("\n[Stats] Generating plots...")
 
         fig = plt.figure(figsize=(16, 12))
 
@@ -637,7 +637,7 @@ class LSTMTrainingPipeline:
         # Save plot
         plot_path = self.results_dir / "lstm_training_results.png"
         plt.savefig(plot_path, dpi=300, bbox_inches="tight")
-        print(f"✅ Saved plot: {plot_path}")
+        print(f"[OK] Saved plot: {plot_path}")
 
         # plt.show()
 
@@ -645,25 +645,25 @@ class LSTMTrainingPipeline:
 
     def save_model_and_results(self):
         """Save trained model, scaler, and results"""
-        print("\n💾 Saving model and results...")
+        print("\n[Save] Saving model and results...")
 
         # Save model (already saved best weights during training)
         model_path = self.model_dir / "lstm_final_model.h5"
         self.model.save(str(model_path))
-        print(f"✅ Saved model: {model_path}")
+        print(f"[OK] Saved model: {model_path}")
 
         # Save scaler
         import joblib
 
         scaler_path = self.model_dir / "lstm_scaler.pkl"
         joblib.dump(self.scaler, str(scaler_path))
-        print(f"✅ Saved scaler: {scaler_path}")
+        print(f"[OK] Saved scaler: {scaler_path}")
 
         # Save feature columns
         features_path = self.model_dir / "lstm_features.json"
         with open(features_path, "w") as f:
             json.dump({"features": self.feature_columns}, f, indent=2)
-        print(f"✅ Saved features: {features_path}")
+        print(f"[OK] Saved features: {features_path}")
 
         # Save configuration
         config = {
@@ -681,19 +681,19 @@ class LSTMTrainingPipeline:
         config_path = self.model_dir / "lstm_config.json"
         with open(config_path, "w") as f:
             json.dump(config, f, indent=2)
-        print(f"✅ Saved config: {config_path}")
+        print(f"[OK] Saved config: {config_path}")
 
         # Save detailed results
         results_path = self.results_dir / "lstm_results.json"
         with open(results_path, "w") as f:
             json.dump(self.results, f, indent=2)
-        print(f"✅ Saved results: {results_path}")
+        print(f"[OK] Saved results: {results_path}")
 
         # Save training history
         history_df = pd.DataFrame(self.history.history)
         history_path = self.results_dir / "lstm_training_history.csv"
         history_df.to_csv(history_path, index=False)
-        print(f"✅ Saved history: {history_path}")
+        print(f"[OK] Saved history: {history_path}")
 
         return self
 
@@ -702,7 +702,7 @@ class LSTMTrainingPipeline:
         start_time = datetime.now()
 
         print("\n" + "=" * 80)
-        print("🚀 STARTING FULL LSTM TRAINING PIPELINE")
+        print("[Launch] STARTING FULL LSTM TRAINING PIPELINE")
         print("=" * 80)
 
         try:
@@ -719,18 +719,18 @@ class LSTMTrainingPipeline:
             elapsed = datetime.now() - start_time
 
             print("\n" + "=" * 80)
-            print("✅ PIPELINE COMPLETED SUCCESSFULLY!")
+            print("[OK] PIPELINE COMPLETED SUCCESSFULLY!")
             print("=" * 80)
             print(f"⏱️ Total time: {elapsed}")
-            print(f"🎯 Test Accuracy: {self.results['test_accuracy']:.4f}")
-            print(f"📊 Test F1-Score: {self.results['test_f1']:.4f}")
+            print(f"[Target] Test Accuracy: {self.results['test_accuracy']:.4f}")
+            print(f"[Stats] Test F1-Score: {self.results['test_f1']:.4f}")
             print("=" * 80)
 
             return self
 
         except Exception as e:
             print("\n" + "=" * 80)
-            print("❌ PIPELINE FAILED")
+            print("[Error] PIPELINE FAILED")
             print("=" * 80)
             print(f"Error: {str(e)}")
             import traceback
@@ -759,9 +759,9 @@ def main():
     pipeline = LSTMTrainingPipeline(**config)
     pipeline.run_full_pipeline(architecture="bidirectional")
 
-    print("\n🎉 LSTM Model training complete!")
+    print("\n[Success] LSTM Model training complete!")
     print(f"📂 Models saved in: {pipeline.model_dir}")
-    print(f"📊 Results saved in: {pipeline.results_dir}")
+    print(f"[Stats] Results saved in: {pipeline.results_dir}")
 
 
 if __name__ == "__main__":

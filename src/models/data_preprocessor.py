@@ -83,7 +83,7 @@ class DataPreprocessor:
         print("-" * 70)
 
         df = pd.read_csv(data_file)
-        print(f"✅ Loaded: {Path(data_file).name}")
+        print(f"[OK] Loaded: {Path(data_file).name}")
         print(f"   Shape: {df.shape}")
 
         if selected_features_file:
@@ -98,7 +98,7 @@ class DataPreprocessor:
             keep_cols.extend([col for col in selected_features if col in df.columns])
 
             df = df[keep_cols]
-            print(f"✅ Filtered to {len(selected_features)} selected features")
+            print(f"[OK] Filtered to {len(selected_features)} selected features")
             print(f"   New shape: {df.shape}")
 
         return df
@@ -117,7 +117,7 @@ class DataPreprocessor:
         Returns:
             DataFrame with 'target' column (0=down/hold, 1=up/buy)
         """
-        print(f"\n🎯 Creating Target Variable (Classification)")
+        print(f"\n[Target] Creating Target Variable (Classification)")
         print("-" * 70)
 
         # Calculate future return
@@ -162,7 +162,7 @@ class DataPreprocessor:
         Returns:
             DataFrame with 'target' column (future return %)
         """
-        print(f"\n🎯 Creating Target Variable (Regression)")
+        print(f"\n[Target] Creating Target Variable (Regression)")
         print("-" * 70)
 
         # Calculate future return
@@ -200,7 +200,7 @@ class DataPreprocessor:
         Returns:
             DataFrame with 'target' column (0/1/2)
         """
-        print(f"\n🎯 Creating Target Variable (Multi-class)")
+        print(f"\n[Target] Creating Target Variable (Multi-class)")
         print("-" * 70)
 
         # Calculate future return
@@ -358,7 +358,7 @@ class DataPreprocessor:
             self.scaler.transform(X_test), columns=X_test.columns, index=X_test.index
         )
 
-        print(f"✅ Scaled {len(X_train.columns)} features")
+        print(f"[OK] Scaled {len(X_train.columns)} features")
         print(f"   Scaler: {self.scaler_type}")
         print(f"   Fitted on: {len(X_train):,} training samples")
 
@@ -378,7 +378,7 @@ class DataPreprocessor:
         Returns:
             (X_seq, y_seq) where X_seq shape is (n_samples, sequence_length, n_features)
         """
-        print(f"\n🔄 Creating Sequences (lookback={sequence_length})")
+        print(f"\n[Reload] Creating Sequences (lookback={sequence_length})")
         print("-" * 70)
 
         X_seq = []
@@ -391,7 +391,7 @@ class DataPreprocessor:
         X_seq = np.array(X_seq)
         y_seq = np.array(y_seq)
 
-        print(f"✅ Created sequences")
+        print(f"[OK] Created sequences")
         print(f"   Original shape: {X.shape}")
         print(f"   Sequence shape: {X_seq.shape}")
         print(f"   Lost samples: {len(X) - len(X_seq)} (first {sequence_length} rows)")
@@ -452,7 +452,7 @@ class DataPreprocessor:
             Dictionary with all preprocessed data
         """
         print("\n" + "=" * 80)
-        print("🔧 DATA PREPROCESSING PIPELINE")
+        print("[Feature Engineering] DATA PREPROCESSING PIPELINE")
         print("=" * 80)
 
         # 1. Load data
@@ -519,7 +519,7 @@ class DataPreprocessor:
             result["class_weights"] = self.get_class_weights(y_train.values)
 
         print("\n" + "=" * 80)
-        print("✅ PREPROCESSING COMPLETE!")
+        print("[OK] PREPROCESSING COMPLETE!")
         print("=" * 80)
         print(f"\n📦 Available data:")
         print(f"  • X_train: {result['X_train'].shape}")

@@ -26,7 +26,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix
 
 print("=" * 80)
-print("🚀 Simple LSTM Training Script")
+print("[Launch] Simple LSTM Training Script")
 print("=" * 80)
 
 
@@ -51,7 +51,7 @@ def load_data():
     for filename in possible_files:
         filepath = data_dir / filename
         if filepath.exists():
-            print(f"✅ พบไฟล์: {filename}")
+            print(f"[OK] พบไฟล์: {filename}")
             df = pd.read_csv(filepath)
             break
 
@@ -59,24 +59,24 @@ def load_data():
         # ลองใช้ไฟล์ที่สร้างจาก daily_update
         recent_file = Path("data/processed_data_20251105.csv")
         if recent_file.exists():
-            print(f"✅ พบไฟล์: {recent_file.name}")
+            print(f"[OK] พบไฟล์: {recent_file.name}")
             df = pd.read_csv(recent_file)
         else:
-            print("❌ ไม่พบไฟล์ข้อมูล!")
-            print("\n💡 แนะนำ: รัน daily_update.bat เพื่อดึงข้อมูลก่อน")
+            print("[Error] ไม่พบไฟล์ข้อมูล!")
+            print("\n[Tip] แนะนำ: รัน daily_update.bat เพื่อดึงข้อมูลก่อน")
             sys.exit(1)
 
-    print(f"📊 โหลดข้อมูลสำเร็จ: {len(df)} แถว, {len(df.columns)} columns")
+    print(f"[Stats] โหลดข้อมูลสำเร็จ: {len(df)} แถว, {len(df.columns)} columns")
     return df
 
 
 def prepare_data(df):
     """เตรียมข้อมูลสำหรับเทรน"""
-    print("\n🔧 กำลังเตรียมข้อมูล...")
+    print("\n[Feature Engineering] กำลังเตรียมข้อมูล...")
 
     # สร้าง target ถ้ายังไม่มี
     if "target" not in df.columns:
-        print("⚠️  ไม่พบ target column, กำลังสร้าง...")
+        print("[Warning]  ไม่พบ target column, กำลังสร้าง...")
         df["future_price"] = df["close"].shift(-4)
         df["target"] = (df["future_price"] > df["close"]).astype(int)
 
@@ -98,9 +98,9 @@ def prepare_data(df):
     for col in feature_cols[:]:
         if df[col].dtype == "object":
             feature_cols.remove(col)
-            print(f"   ⚠️  ข้ามcolumn: {col} (ประเภทข้อมูลไม่เหมาะสม)")
+            print(f"   [Warning]  ข้ามcolumn: {col} (ประเภทข้อมูลไม่เหมาะสม)")
 
-    print(f"📊 จำนวน features: {len(feature_cols)}")
+    print(f"[Stats] จำนวน features: {len(feature_cols)}")
 
     # เอาเฉพาะ columns ที่ต้องการ
     X = df[feature_cols].copy()
@@ -111,11 +111,11 @@ def prepare_data(df):
     X = X[mask]
     y = y[mask]
 
-    print(f"📊 ข้อมูลหลังทำความสะอาด: {len(X)} แถว")
-    print(f"📊 Target distribution: UP={y.sum()}, DOWN={len(y) - y.sum()}")
+    print(f"[Stats] ข้อมูลหลังทำความสะอาด: {len(X)} แถว")
+    print(f"[Stats] Target distribution: UP={y.sum()}, DOWN={len(y) - y.sum()}")
 
     if len(X) < 100:
-        print("❌ ข้อมูลไม่เพียงพอ! (ต้องการอย่างน้อย 100 แถว)")
+        print("[Error] ข้อมูลไม่เพียงพอ! (ต้องการอย่างน้อย 100 แถว)")
         sys.exit(1)
 
     return X, y, feature_cols
@@ -144,8 +144,8 @@ def create_model(input_shape, units=64, dropout=0.3):
         metrics=["accuracy"],
     )
 
-    print("✅ Model สร้างเสร็จแล้ว")
-    print(f"📊 Parameters: {model.count_params():,}")
+    print("[OK] Model สร้างเสร็จแล้ว")
+    print(f"[Stats] Parameters: {model.count_params():,}")
 
     return model
 
@@ -153,7 +153,7 @@ def create_model(input_shape, units=64, dropout=0.3):
 def train_model(X, y, epochs=50, batch_size=32, validation_split=0.2):
     """เทรน model"""
     print("\n" + "=" * 80)
-    print("🎯 เริ่มการเทรน")
+    print("[Target] เริ่มการเทรน")
     print("=" * 80)
 
     # Split data
@@ -161,8 +161,8 @@ def train_model(X, y, epochs=50, batch_size=32, validation_split=0.2):
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    print(f"📊 Training set: {len(X_train)} แถว")
-    print(f"📊 Test set: {len(X_test)} แถว")
+    print(f"[Stats] Training set: {len(X_train)} แถว")
+    print(f"[Stats] Test set: {len(X_test)} แถว")
 
     # Normalize
     scaler = StandardScaler()
@@ -191,7 +191,7 @@ def train_model(X, y, epochs=50, batch_size=32, validation_split=0.2):
     ]
 
     # Train
-    print(f"\n🔄 กำลังเทรน {epochs} epochs...\n")
+    print(f"\n[Reload] กำลังเทรน {epochs} epochs...\n")
 
     history = model.fit(
         X_train_reshaped,
@@ -205,23 +205,23 @@ def train_model(X, y, epochs=50, batch_size=32, validation_split=0.2):
 
     # Evaluate
     print("\n" + "=" * 80)
-    print("📊 ประเมินผล")
+    print("[Stats] ประเมินผล")
     print("=" * 80)
 
     train_loss, train_acc = model.evaluate(X_train_reshaped, y_train, verbose=0)
     test_loss, test_acc = model.evaluate(X_test_reshaped, y_test, verbose=0)
 
-    print(f"\n✅ Training Accuracy: {train_acc * 100:.2f}%")
-    print(f"✅ Test Accuracy: {test_acc * 100:.2f}%")
+    print(f"\n[OK] Training Accuracy: {train_acc * 100:.2f}%")
+    print(f"[OK] Test Accuracy: {test_acc * 100:.2f}%")
 
     # Predictions
     y_pred_proba = model.predict(X_test_reshaped, verbose=0)
     y_pred = (y_pred_proba > 0.5).astype(int).flatten()
 
-    print("\n📊 Classification Report:")
+    print("\n[Stats] Classification Report:")
     print(classification_report(y_test, y_pred, target_names=["DOWN", "UP"]))
 
-    print("\n📊 Confusion Matrix:")
+    print("\n[Stats] Confusion Matrix:")
     cm = confusion_matrix(y_test, y_pred)
     print(f"         Predicted")
     print(f"         DOWN  UP")
@@ -244,7 +244,7 @@ def train_model(X, y, epochs=50, batch_size=32, validation_split=0.2):
 def save_model(model, scaler, feature_cols, metrics):
     """บันทึก model"""
     print("\n" + "=" * 80)
-    print("💾 กำลังบันทึก Model")
+    print("[Save] กำลังบันทึก Model")
     print("=" * 80)
 
     # สร้างโฟลเดอร์
@@ -256,19 +256,19 @@ def save_model(model, scaler, feature_cols, metrics):
     # บันทึก model
     model_path = models_dir / f"lstm_simple_{timestamp}.keras"
     model.save(model_path)
-    print(f"✅ Model: {model_path}")
+    print(f"[OK] Model: {model_path}")
 
     # บันทึก scaler
     scaler_path = models_dir / f"scaler_simple_{timestamp}.pkl"
     with open(scaler_path, "wb") as f:
         pickle.dump(scaler, f)
-    print(f"✅ Scaler: {scaler_path}")
+    print(f"[OK] Scaler: {scaler_path}")
 
     # บันทึก feature names
     features_path = models_dir / f"features_simple_{timestamp}.pkl"
     with open(features_path, "wb") as f:
         pickle.dump(feature_cols, f)
-    print(f"✅ Features: {features_path}")
+    print(f"[OK] Features: {features_path}")
 
     # บันทึก metadata
     metadata = {
@@ -288,10 +288,10 @@ def save_model(model, scaler, feature_cols, metrics):
     metadata_path = models_dir / f"metadata_simple_{timestamp}.json"
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=4)
-    print(f"✅ Metadata: {metadata_path}")
+    print(f"[OK] Metadata: {metadata_path}")
 
     print("\n" + "=" * 80)
-    print("✅ บันทึกเสร็จสมบูรณ์!")
+    print("[OK] บันทึกเสร็จสมบูรณ์!")
     print("=" * 80)
 
     return model_path
@@ -318,7 +318,7 @@ def main():
         if args.data:
             print(f"📂 กำลังโหลดข้อมูลจาก: {args.data}")
             df = pd.read_csv(args.data)
-            print(f"📊 โหลดข้อมูลสำเร็จ: {len(df)} แถว, {len(df.columns)} columns")
+            print(f"[Stats] โหลดข้อมูลสำเร็จ: {len(df)} แถว, {len(df.columns)} columns")
         else:
             df = load_data()
 
@@ -334,18 +334,18 @@ def main():
         model_path = save_model(model, scaler, feature_cols, metrics)
 
         # Summary
-        print("\n" + "🎉" * 40)
-        print("\n✅ การเทรนเสร็จสมบูรณ์!\n")
-        print(f"📊 Test Accuracy: {metrics['test_acc'] * 100:.2f}%")
-        print(f"💾 Model saved: {model_path.name}")
-        print("\n💡 ขั้นตอนต่อไป:")
+        print("\n" + "[Success]" * 40)
+        print("\n[OK] การเทรนเสร็จสมบูรณ์!\n")
+        print(f"[Stats] Test Accuracy: {metrics['test_acc'] * 100:.2f}%")
+        print(f"[Save] Model saved: {model_path.name}")
+        print("\n[Tip] ขั้นตอนต่อไป:")
         print("   1. รัน daily_update.bat เพื่ออัพเดทข้อมูล")
         print("   2. รัน paper_trading.py เพื่อทดสอบเทรด")
         print("   3. รัน live_trading.py เพื่อเทรดจริง")
-        print("\n" + "🎉" * 40 + "\n")
+        print("\n" + "[Success]" * 40 + "\n")
 
     except Exception as e:
-        print(f"\n❌ เกิดข้อผิดพลาด: {e}")
+        print(f"\n[Error] เกิดข้อผิดพลาด: {e}")
         import traceback
 
         traceback.print_exc()

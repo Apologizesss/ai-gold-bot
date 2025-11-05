@@ -23,7 +23,7 @@ def main():
     """Process all timeframes through feature pipeline."""
 
     print("=" * 80)
-    print("🔧 FEATURE ENGINEERING - ALL TIMEFRAMES")
+    print("[Feature Engineering] FEATURE ENGINEERING - ALL TIMEFRAMES")
     print("=" * 80)
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
@@ -39,7 +39,7 @@ def main():
     raw_files = sorted(glob.glob(str(raw_dir / "XAUUSD_*.csv")))
 
     if not raw_files:
-        print("❌ No raw data files found in data/raw/")
+        print("[Error] No raw data files found in data/raw/")
         return
 
     print(f"📂 Found {len(raw_files)} raw data files:\n")
@@ -80,7 +80,7 @@ def main():
 
             elapsed = time.time() - start_time
 
-            print(f"✅ SUCCESS in {elapsed:.2f}s")
+            print(f"[OK] SUCCESS in {elapsed:.2f}s")
             print(f"   Output: {output_filename}\n")
 
             results.append(
@@ -95,7 +95,7 @@ def main():
 
         except Exception as e:
             elapsed = time.time() - start_time
-            print(f"❌ FAILED in {elapsed:.2f}s")
+            print(f"[Error] FAILED in {elapsed:.2f}s")
             print(f"   Error: {str(e)}\n")
 
             results.append(
@@ -113,15 +113,15 @@ def main():
     total_elapsed = time.time() - total_start
 
     print("=" * 80)
-    print("📊 PROCESSING SUMMARY")
+    print("[Stats] PROCESSING SUMMARY")
     print("=" * 80)
 
     success_count = sum(1 for r in results if r["status"] == "SUCCESS")
     failed_count = len(results) - success_count
 
     print(f"\nTotal files processed: {len(results)}")
-    print(f"✅ Successful: {success_count}")
-    print(f"❌ Failed: {failed_count}")
+    print(f"[OK] Successful: {success_count}")
+    print(f"[Error] Failed: {failed_count}")
     print(f"⏱️  Total time: {total_elapsed:.2f}s ({total_elapsed / 60:.2f} minutes)")
     print()
 
@@ -129,7 +129,7 @@ def main():
     print("Detailed Results:")
     print("-" * 80)
     for r in results:
-        status_icon = "✅" if r["status"] == "SUCCESS" else "❌"
+        status_icon = "[OK]" if r["status"] == "SUCCESS" else "[Error]"
         print(
             f"{status_icon} {r['timeframe']:5s} | {r['input']:40s} | {r['time']:6.2f}s"
         )

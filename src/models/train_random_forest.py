@@ -110,7 +110,7 @@ class RandomForestTrainer:
             print(f"  {key:20s}: {val}")
 
         # Train model
-        print("\n🔧 Training model...")
+        print("\n[Feature Engineering] Training model...")
 
         self.model = RandomForestClassifier(**params)
         self.model.fit(X_train, y_train)
@@ -118,7 +118,7 @@ class RandomForestTrainer:
         # Get OOB score
         self.oob_score = self.model.oob_score_
 
-        print("✅ Training complete!")
+        print("[OK] Training complete!")
         print(f"   OOB Score: {self.oob_score:.4f}")
 
         # Evaluate
@@ -149,7 +149,7 @@ class RandomForestTrainer:
             verbose: Verbosity level
         """
         print("\n" + "=" * 80)
-        print("🔍 HYPERPARAMETER TUNING WITH RANDOMIZED SEARCH")
+        print("[Search] HYPERPARAMETER TUNING WITH RANDOMIZED SEARCH")
         print("=" * 80)
 
         # Convert class_weights
@@ -179,7 +179,7 @@ class RandomForestTrainer:
         tscv = TimeSeriesSplit(n_splits=n_splits)
 
         # Randomized search
-        print(f"\n🔍 Running RandomizedSearchCV with {n_splits}-fold time-series CV...")
+        print(f"\n[Search] Running RandomizedSearchCV with {n_splits}-fold time-series CV...")
 
         random_search = RandomizedSearchCV(
             estimator=base_model,
@@ -199,7 +199,7 @@ class RandomForestTrainer:
         self.best_params = random_search.best_params_
         self.oob_score = self.model.oob_score_ if self.model.oob_score else None
 
-        print("\n✅ Tuning complete!")
+        print("\n[OK] Tuning complete!")
         print(f"\nBest parameters:")
         for key, val in self.best_params.items():
             print(f"  {key:20s}: {val}")
@@ -221,7 +221,7 @@ class RandomForestTrainer:
         """Evaluate model performance."""
 
         print("\n" + "=" * 80)
-        print("📊 MODEL EVALUATION")
+        print("[Stats] MODEL EVALUATION")
         print("=" * 80)
 
         # Predictions
@@ -283,7 +283,7 @@ class RandomForestTrainer:
     def _analyze_feature_importance(self, feature_names: list):
         """Analyze and print feature importance."""
 
-        print("\n📈 FEATURE IMPORTANCE")
+        print("\n[Chart] FEATURE IMPORTANCE")
         print("-" * 80)
 
         # Get importance
@@ -305,10 +305,10 @@ class RandomForestTrainer:
         """Plot feature importance."""
 
         if self.feature_importance is None:
-            print("❌ No feature importance available")
+            print("[Error] No feature importance available")
             return
 
-        print(f"\n📊 Plotting top {top_n} features...")
+        print(f"\n[Stats] Plotting top {top_n} features...")
 
         fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -334,7 +334,7 @@ class RandomForestTrainer:
         plt.savefig(output_file, dpi=150, bbox_inches="tight")
         plt.close()
 
-        print(f"✅ Saved: {output_file.name}")
+        print(f"[OK] Saved: {output_file.name}")
 
     def compare_with_xgboost(self, xgboost_metrics: dict = None):
         """Compare Random Forest with XGBoost."""
@@ -350,7 +350,7 @@ class RandomForestTrainer:
                     xgboost_metrics = metadata.get("metrics", {}).get("baseline", {})
 
         if not xgboost_metrics:
-            print("⚠️  XGBoost metrics not available for comparison")
+            print("[Warning]  XGBoost metrics not available for comparison")
             return
 
         print("\n" + "=" * 80)
@@ -397,7 +397,7 @@ class RandomForestTrainer:
         """Save trained model."""
 
         if self.model is None:
-            print("❌ No model to save")
+            print("[Error] No model to save")
             return
 
         model_file = self.output_dir / model_name
@@ -405,7 +405,7 @@ class RandomForestTrainer:
         with open(model_file, "wb") as f:
             pickle.dump(self.model, f)
 
-        print(f"\n💾 Model saved: {model_file}")
+        print(f"\n[Save] Model saved: {model_file}")
 
         # Save metadata
         metadata = {
@@ -424,7 +424,7 @@ class RandomForestTrainer:
         with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"✅ Metadata saved: {metadata_file.name}")
+        print(f"[OK] Metadata saved: {metadata_file.name}")
 
     def load_model(self, model_name: str = "random_forest_model.pkl"):
         """Load trained model."""
@@ -432,13 +432,13 @@ class RandomForestTrainer:
         model_file = self.output_dir / model_name
 
         if not model_file.exists():
-            print(f"❌ Model file not found: {model_file}")
+            print(f"[Error] Model file not found: {model_file}")
             return False
 
         with open(model_file, "rb") as f:
             self.model = pickle.load(f)
 
-        print(f"✅ Model loaded: {model_file}")
+        print(f"[OK] Model loaded: {model_file}")
         return True
 
 
@@ -463,11 +463,11 @@ def main():
 
     # Check files
     if not data_file.exists():
-        print(f"❌ Data file not found: {data_file}")
+        print(f"[Error] Data file not found: {data_file}")
         return
 
     if not selected_features_file.exists():
-        print(f"❌ Features file not found: {selected_features_file}")
+        print(f"[Error] Features file not found: {selected_features_file}")
         return
 
     # Preprocess data
@@ -538,7 +538,7 @@ def main():
     print(f"  • model_metadata.json         (Model info)")
     print(f"  • feature_importance.png      (Feature importance plot)")
 
-    print(f"\n📊 Performance Summary:")
+    print(f"\n[Stats] Performance Summary:")
     print(
         f"  Train Accuracy:      {trainer.metrics['baseline']['train']['accuracy']:.4f}"
     )
@@ -550,7 +550,7 @@ def main():
     if trainer.oob_score:
         print(f"  OOB Score:           {trainer.oob_score:.4f}")
 
-    print(f"\n🚀 Next steps:")
+    print(f"\n[Launch] Next steps:")
     print(f"  1. Train LSTM model with sequences")
     print(f"  2. Create ensemble (RF + XGBoost)")
     print(f"  3. Backtest strategies")

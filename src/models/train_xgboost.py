@@ -80,7 +80,7 @@ class XGBoostTrainer:
             class_weights: Class weights for imbalanced data
         """
         print("\n" + "=" * 80)
-        print("🎯 TRAINING BASELINE XGBOOST MODEL")
+        print("[Target] TRAINING BASELINE XGBOOST MODEL")
         print("=" * 80)
 
         # Calculate scale_pos_weight if binary classification
@@ -111,7 +111,7 @@ class XGBoostTrainer:
             print(f"  {key:20s}: {val}")
 
         # Train model
-        print("\n🔧 Training model...")
+        print("\n[Feature Engineering] Training model...")
 
         self.model = xgb.XGBClassifier(**params)
 
@@ -123,7 +123,7 @@ class XGBoostTrainer:
             verbose=False,
         )
 
-        print("✅ Training complete!")
+        print("[OK] Training complete!")
 
         # Evaluate
         self._evaluate_model(X_train, y_train, X_val, y_val, "baseline")
@@ -151,7 +151,7 @@ class XGBoostTrainer:
             verbose: Verbosity level
         """
         print("\n" + "=" * 80)
-        print("🔍 HYPERPARAMETER TUNING WITH GRID SEARCH")
+        print("[Search] HYPERPARAMETER TUNING WITH GRID SEARCH")
         print("=" * 80)
 
         # Calculate scale_pos_weight
@@ -190,7 +190,7 @@ class XGBoostTrainer:
         tscv = TimeSeriesSplit(n_splits=n_splits)
 
         # Grid search
-        print(f"\n🔍 Running GridSearchCV with {n_splits}-fold time-series CV...")
+        print(f"\n[Search] Running GridSearchCV with {n_splits}-fold time-series CV...")
 
         grid_search = GridSearchCV(
             estimator=base_model,
@@ -207,7 +207,7 @@ class XGBoostTrainer:
         self.model = grid_search.best_estimator_
         self.best_params = grid_search.best_params_
 
-        print("\n✅ Tuning complete!")
+        print("\n[OK] Tuning complete!")
         print(f"\nBest parameters:")
         for key, val in self.best_params.items():
             print(f"  {key:20s}: {val}")
@@ -227,7 +227,7 @@ class XGBoostTrainer:
         """Evaluate model performance."""
 
         print("\n" + "=" * 80)
-        print("📊 MODEL EVALUATION")
+        print("[Stats] MODEL EVALUATION")
         print("=" * 80)
 
         # Predictions
@@ -282,7 +282,7 @@ class XGBoostTrainer:
     def _analyze_feature_importance(self, feature_names: list):
         """Analyze and plot feature importance."""
 
-        print("\n📈 FEATURE IMPORTANCE")
+        print("\n[Chart] FEATURE IMPORTANCE")
         print("-" * 80)
 
         # Get importance
@@ -304,10 +304,10 @@ class XGBoostTrainer:
         """Plot feature importance."""
 
         if self.feature_importance is None:
-            print("❌ No feature importance available")
+            print("[Error] No feature importance available")
             return
 
-        print(f"\n📊 Plotting top {top_n} features...")
+        print(f"\n[Stats] Plotting top {top_n} features...")
 
         fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -329,13 +329,13 @@ class XGBoostTrainer:
         plt.savefig(output_file, dpi=150, bbox_inches="tight")
         plt.close()
 
-        print(f"✅ Saved: {output_file.name}")
+        print(f"[OK] Saved: {output_file.name}")
 
     def save_model(self, model_name: str = "xgboost_model.pkl"):
         """Save trained model."""
 
         if self.model is None:
-            print("❌ No model to save")
+            print("[Error] No model to save")
             return
 
         model_file = self.output_dir / model_name
@@ -343,7 +343,7 @@ class XGBoostTrainer:
         with open(model_file, "wb") as f:
             pickle.dump(self.model, f)
 
-        print(f"\n💾 Model saved: {model_file}")
+        print(f"\n[Save] Model saved: {model_file}")
 
         # Save metadata
         metadata = {
@@ -359,7 +359,7 @@ class XGBoostTrainer:
         with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"✅ Metadata saved: {metadata_file.name}")
+        print(f"[OK] Metadata saved: {metadata_file.name}")
 
     def load_model(self, model_name: str = "xgboost_model.pkl"):
         """Load trained model."""
@@ -367,13 +367,13 @@ class XGBoostTrainer:
         model_file = self.output_dir / model_name
 
         if not model_file.exists():
-            print(f"❌ Model file not found: {model_file}")
+            print(f"[Error] Model file not found: {model_file}")
             return False
 
         with open(model_file, "rb") as f:
             self.model = pickle.load(f)
 
-        print(f"✅ Model loaded: {model_file}")
+        print(f"[OK] Model loaded: {model_file}")
         return True
 
 
@@ -398,11 +398,11 @@ def main():
 
     # Check files
     if not data_file.exists():
-        print(f"❌ Data file not found: {data_file}")
+        print(f"[Error] Data file not found: {data_file}")
         return
 
     if not selected_features_file.exists():
-        print(f"❌ Features file not found: {selected_features_file}")
+        print(f"[Error] Features file not found: {selected_features_file}")
         return
 
     # Preprocess data
@@ -470,7 +470,7 @@ def main():
     print(f"  • model_metadata.json        (Model info)")
     print(f"  • feature_importance.png     (Feature importance plot)")
 
-    print(f"\n📊 Performance Summary:")
+    print(f"\n[Stats] Performance Summary:")
     print(
         f"  Train Accuracy:      {trainer.metrics['baseline']['train']['accuracy']:.4f}"
     )
@@ -480,7 +480,7 @@ def main():
     print(f"  Test Accuracy:       {test_metrics['accuracy']:.4f}")
     print(f"  Test ROC-AUC:        {test_metrics['roc_auc']:.4f}")
 
-    print(f"\n🚀 Next steps:")
+    print(f"\n[Launch] Next steps:")
     print(f"  1. Train Random Forest model")
     print(f"  2. Train LSTM model")
     print(f"  3. Compare model performances")

@@ -50,7 +50,7 @@ class AdvancedTrainer:
 
         # Initialize log
         self.log("=" * 80)
-        self.log("🎯 TRAINING TO 70% ACCURACY")
+        self.log("[Target] TRAINING TO 70% ACCURACY")
         self.log("=" * 80)
         self.log(f"Target: {self.target_accuracy * 100:.1f}%")
         self.log(f"Max iterations: {self.max_iterations}")
@@ -196,7 +196,7 @@ class AdvancedTrainer:
         """Train model with given configuration"""
 
         self.log("\n" + "─" * 80)
-        self.log(f"🔧 Configuration #{self.iteration + 1}")
+        self.log(f"[Feature Engineering] Configuration #{self.iteration + 1}")
         self.log("─" * 80)
         for key, value in config.items():
             self.log(f"  {key}: {value}")
@@ -221,7 +221,7 @@ class AdvancedTrainer:
             str(config["epochs"]),
         ]
 
-        self.log(f"\n🚀 Starting training...")
+        self.log(f"\n[Launch] Starting training...")
         start_time = time.time()
 
         try:
@@ -235,7 +235,7 @@ class AdvancedTrainer:
 
             elapsed = time.time() - start_time
             self.log(
-                f"✅ Training completed in {elapsed:.1f}s ({elapsed / 60:.1f} min)"
+                f"[OK] Training completed in {elapsed:.1f}s ({elapsed / 60:.1f} min)"
             )
 
             # Parse results
@@ -249,7 +249,7 @@ class AdvancedTrainer:
                 recall = results.get("test_recall", 0.0)
                 f1 = results.get("test_f1", 0.0)
 
-                self.log("\n📊 Results:")
+                self.log("\n[Stats] Results:")
                 self.log(f"  Accuracy:  {accuracy:.4f} ({accuracy * 100:.2f}%)")
                 self.log(f"  Precision: {precision:.4f}")
                 self.log(f"  Recall:    {recall:.4f}")
@@ -276,7 +276,7 @@ class AdvancedTrainer:
                     self.best_config = config
                     self.no_improvement_count = 0
 
-                    self.log(f"\n🎉 NEW BEST! Improved by {improvement * 100:.2f}%")
+                    self.log(f"\n[Success] NEW BEST! Improved by {improvement * 100:.2f}%")
                     self.log(f"   Best accuracy: {self.best_accuracy * 100:.2f}%")
 
                     # Save best config
@@ -294,7 +294,7 @@ class AdvancedTrainer:
                 else:
                     self.no_improvement_count += 1
                     gap = self.best_accuracy - accuracy
-                    self.log(f"\n📉 No improvement ({gap * 100:.2f}% below best)")
+                    self.log(f"\n[Down] No improvement ({gap * 100:.2f}% below best)")
                     self.log(
                         f"   No improvement count: {self.no_improvement_count}/{self.patience}"
                     )
@@ -302,13 +302,13 @@ class AdvancedTrainer:
                 # Check if target reached
                 if accuracy >= self.target_accuracy:
                     self.log("\n" + "=" * 80)
-                    self.log("🎯 TARGET REACHED!")
+                    self.log("[Target] TARGET REACHED!")
                     self.log("=" * 80)
                     self.log(
-                        f"✅ Achieved {accuracy * 100:.2f}% accuracy (target: {self.target_accuracy * 100:.1f}%)"
+                        f"[OK] Achieved {accuracy * 100:.2f}% accuracy (target: {self.target_accuracy * 100:.1f}%)"
                     )
-                    self.log(f"✅ Iteration: {self.iteration + 1}")
-                    self.log(f"✅ Configuration:")
+                    self.log(f"[OK] Iteration: {self.iteration + 1}")
+                    self.log(f"[OK] Configuration:")
                     for key, value in config.items():
                         self.log(f"   {key}: {value}")
                     return True
@@ -316,14 +316,14 @@ class AdvancedTrainer:
                 return False
 
             else:
-                self.log("❌ Results file not found!")
+                self.log("[Error] Results file not found!")
                 return False
 
         except subprocess.TimeoutExpired:
-            self.log("❌ Training timeout (2 hours)")
+            self.log("[Error] Training timeout (2 hours)")
             return False
         except Exception as e:
-            self.log(f"❌ Error: {str(e)}")
+            self.log(f"[Error] Error: {str(e)}")
             return False
 
     def save_results(self):
@@ -334,7 +334,7 @@ class AdvancedTrainer:
             df.to_csv(self.results_file, index=False)
 
             self.log(
-                f"\n💾 Saved {len(self.all_results)} results to: {self.results_file}"
+                f"\n[Save] Saved {len(self.all_results)} results to: {self.results_file}"
             )
 
             # Show top 5
@@ -353,9 +353,9 @@ class AdvancedTrainer:
     def run(self):
         """Main training loop"""
 
-        self.log("\n🚀 Starting continuous training...")
-        self.log(f"🎯 Target: {self.target_accuracy * 100:.1f}%")
-        self.log(f"🔄 Max iterations: {self.max_iterations}")
+        self.log("\n[Launch] Starting continuous training...")
+        self.log(f"[Target] Target: {self.target_accuracy * 100:.1f}%")
+        self.log(f"[Reload] Max iterations: {self.max_iterations}")
         self.log("")
 
         while self.iteration < self.max_iterations:
@@ -380,7 +380,7 @@ class AdvancedTrainer:
             # Check if target reached
             if target_reached:
                 self.log("\n" + "=" * 80)
-                self.log("🎉 SUCCESS! TARGET ACCURACY REACHED!")
+                self.log("[Success] SUCCESS! TARGET ACCURACY REACHED!")
                 self.log("=" * 80)
                 break
 
@@ -414,7 +414,7 @@ class AdvancedTrainer:
 
         # Final summary
         self.log("\n" + "=" * 80)
-        self.log("📊 TRAINING COMPLETE - FINAL SUMMARY")
+        self.log("[Stats] TRAINING COMPLETE - FINAL SUMMARY")
         self.log("=" * 80)
         self.log(f"Total iterations: {self.iteration}")
         self.log(f"Best accuracy: {self.best_accuracy * 100:.2f}%")
@@ -422,12 +422,12 @@ class AdvancedTrainer:
 
         if self.best_accuracy >= self.target_accuracy:
             self.log(
-                f"✅ TARGET REACHED! ({(self.best_accuracy - self.target_accuracy) * 100:.2f}% above target)"
+                f"[OK] TARGET REACHED! ({(self.best_accuracy - self.target_accuracy) * 100:.2f}% above target)"
             )
         else:
             gap = self.target_accuracy - self.best_accuracy
-            self.log(f"📈 Gap to target: {gap * 100:.2f}%")
-            self.log(f"\n💡 Suggestions:")
+            self.log(f"[Chart] Gap to target: {gap * 100:.2f}%")
+            self.log(f"\n[Tip] Suggestions:")
             self.log(f"   - Collect more training data (currently ~6k samples)")
             self.log(f"   - Try different timeframes (M5, M30, H1)")
             self.log(f"   - Feature engineering (add more indicators)")
@@ -481,10 +481,10 @@ def main():
         success = trainer.run()
 
         if success:
-            print("\n🎉 Training successful!")
+            print("\n[Success] Training successful!")
             sys.exit(0)
         else:
-            print("\n📊 Training completed but target not reached")
+            print("\n[Stats] Training completed but target not reached")
             print("   Check results for best configuration")
             sys.exit(1)
 
@@ -494,7 +494,7 @@ def main():
         print("   Results saved.")
         sys.exit(130)
     except Exception as e:
-        print(f"\n❌ Error: {str(e)}")
+        print(f"\n[Error] Error: {str(e)}")
         sys.exit(1)
 
 

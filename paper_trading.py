@@ -36,7 +36,7 @@ class PaperTrading:
     def __init__(
         self,
         symbol: str = "XAUUSD",
-        timeframe: str = "H1",
+        timeframe: str = "M5",
         model_path: str = "results/xgboost/xgboost_model.pkl",
         scaler_path: str = "results/xgboost/xgboost_scaler.pkl",
         confidence_threshold: float = 0.70,
@@ -421,9 +421,19 @@ class PaperTrading:
                     f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Check #{iteration}"
                 )
 
-                # Check if we need to run inference (once per hour)
+                # Check if we need to run inference
+                # Timeframe-based intervals: M5=300s, M15=900s, H1=3600s
                 time_since_last = (current_time - last_inference_time).total_seconds()
-                if time_since_last >= 3600:  # 1 hour
+                inference_intervals = {
+                    "M5": 300,
+                    "M15": 900,
+                    "M30": 1800,
+                    "H1": 3600,
+                    "H4": 14400,
+                    "D1": 86400,
+                }
+                inference_interval = inference_intervals.get(self.timeframe, 3600)
+                if time_since_last >= inference_interval:
                     print("  Running inference...")
                     signal = self.run_inference()
 
@@ -503,7 +513,7 @@ def main():
         "--symbol", "-s", default="XAUUSD", help="Trading symbol (default: XAUUSD)"
     )
     parser.add_argument(
-        "--timeframe", "-t", default="H1", help="Timeframe (default: H1)"
+        "--timeframe", "-t", default="M5", help="Timeframe (default: M5)"
     )
     parser.add_argument(
         "--threshold",
@@ -535,8 +545,8 @@ def main():
         "--interval",
         "-i",
         type=int,
-        default=60,
-        help="Check interval in seconds (default: 60)",
+        default=30,
+        help="Check interval in seconds (default: 30 for M5)",
     )
 
     args = parser.parse_args()

@@ -30,11 +30,11 @@ def collect_data_for_timeframe(symbol, timeframe, days):
 
     # เชื่อมต่อ MT5
     if not collector.initialize():
-        print("❌ ไม่สามารถเชื่อมต่อ MT5 ได้")
+        print("[Error] ไม่สามารถเชื่อมต่อ MT5 ได้")
         return None
 
     if not collector.check_symbol():
-        print(f"❌ ไม่สามารถเข้าถึง {symbol} ได้")
+        print(f"[Error] ไม่สามารถเข้าถึง {symbol} ได้")
         mt5.shutdown()
         return None
 
@@ -43,7 +43,7 @@ def collect_data_for_timeframe(symbol, timeframe, days):
     start_date = end_date - timedelta(days=days)
 
     print(
-        f"📊 ช่วงเวลา: {start_date.strftime('%Y-%m-%d')} ถึง {end_date.strftime('%Y-%m-%d')}"
+        f"[Stats] ช่วงเวลา: {start_date.strftime('%Y-%m-%d')} ถึง {end_date.strftime('%Y-%m-%d')}"
     )
 
     df = collector.collect_historical_data(date_from=start_date, date_to=end_date)
@@ -51,10 +51,10 @@ def collect_data_for_timeframe(symbol, timeframe, days):
     mt5.shutdown()
 
     if df is None or len(df) == 0:
-        print("❌ ไม่สามารถดึงข้อมูลได้")
+        print("[Error] ไม่สามารถดึงข้อมูลได้")
         return None
 
-    print(f"✅ ดึงข้อมูลสำเร็จ: {len(df)} แท่งเทียน")
+    print(f"[OK] ดึงข้อมูลสำเร็จ: {len(df)} แท่งเทียน")
 
     # เปลี่ยนชื่อ column
     if "timestamp" in df.columns and "time" not in df.columns:
@@ -67,16 +67,16 @@ def collect_data_for_timeframe(symbol, timeframe, days):
 
 def add_features_and_target(df):
     """เพิ่ม features และ target"""
-    print("\n🔧 กำลังสร้าง features...")
+    print("\n[Feature Engineering] กำลังสร้าง features...")
 
     # เพิ่ม features
     pipeline = FeaturePipeline()
     df_features = pipeline.add_features(df)
 
-    print(f"✅ สร้าง features สำเร็จ: {len(df_features.columns)} columns")
+    print(f"[OK] สร้าง features สำเร็จ: {len(df_features.columns)} columns")
 
     # สร้าง target
-    print("🎯 กำลังสร้าง target...")
+    print("[Target] กำลังสร้าง target...")
     df_features["future_price"] = df_features["close"].shift(-4)
     df_features["target"] = (df_features["future_price"] > df_features["close"]).astype(
         int
@@ -86,9 +86,9 @@ def add_features_and_target(df):
     important_cols = ["open", "high", "low", "close", "target"]
     df_clean = df_features.dropna(subset=important_cols)
 
-    print(f"✅ ข้อมูลหลังทำความสะอาด: {len(df_clean)} แถว")
+    print(f"[OK] ข้อมูลหลังทำความสะอาด: {len(df_clean)} แถว")
     print(
-        f"📊 Target distribution: UP={df_clean['target'].sum()}, DOWN={len(df_clean) - df_clean['target'].sum()}"
+        f"[Stats] Target distribution: UP={df_clean['target'].sum()}, DOWN={len(df_clean) - df_clean['target'].sum()}"
     )
 
     return df_clean
@@ -103,7 +103,7 @@ def save_data(df, symbol, timeframe):
     filepath = output_dir / filename
 
     df.to_csv(filepath, index=False)
-    print(f"💾 บันทึกไฟล์: {filepath}")
+    print(f"[Save] บันทึกไฟล์: {filepath}")
 
     return filepath
 
@@ -126,7 +126,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 80)
-    print("🚀 IMPROVED DATA COLLECTION")
+    print("[Launch] IMPROVED DATA COLLECTION")
     print("=" * 80)
     print(f"Symbol: {args.symbol}")
     print(f"Days: {args.days}")
@@ -141,14 +141,14 @@ def main():
             df = collect_data_for_timeframe(args.symbol, timeframe, args.days)
 
             if df is None:
-                print(f"⚠️  ข้าม {timeframe} - ไม่สามารถดึงข้อมูลได้")
+                print(f"[Warning]  ข้าม {timeframe} - ไม่สามารถดึงข้อมูลได้")
                 continue
 
             # เพิ่ม features และ target
             df_processed = add_features_and_target(df)
 
             if len(df_processed) < 100:
-                print(f"⚠️  ข้าม {timeframe} - ข้อมูลไม่เพียงพอ ({len(df_processed)} แถว)")
+                print(f"[Warning]  ข้าม {timeframe} - ข้อมูลไม่เพียงพอ ({len(df_processed)} แถว)")
                 continue
 
             # บันทึกข้อมูล
@@ -160,31 +160,31 @@ def main():
                 "file": str(filepath),
             }
 
-            print(f"✅ {timeframe} เสร็จสมบูรณ์!")
+            print(f"[OK] {timeframe} เสร็จสมบูรณ์!")
 
         except Exception as e:
-            print(f"❌ เกิดข้อผิดพลาดกับ {timeframe}: {e}")
+            print(f"[Error] เกิดข้อผิดพลาดกับ {timeframe}: {e}")
             continue
 
     # สรุปผล
     print("\n" + "=" * 80)
-    print("📊 สรุปผลการดึงข้อมูล")
+    print("[Stats] สรุปผลการดึงข้อมูล")
     print("=" * 80)
 
     if not results:
-        print("❌ ไม่มีข้อมูลที่ดึงสำเร็จ")
+        print("[Error] ไม่มีข้อมูลที่ดึงสำเร็จ")
         sys.exit(1)
 
     for timeframe, info in results.items():
-        print(f"\n✅ {timeframe}:")
+        print(f"\n[OK] {timeframe}:")
         print(f"   แถว: {info['rows']:,}")
         print(f"   Features: {info['features']}")
         print(f"   ไฟล์: {info['file']}")
 
     print("\n" + "=" * 80)
-    print("✅ เสร็จสมบูรณ์!")
+    print("[OK] เสร็จสมบูรณ์!")
     print("=" * 80)
-    print("\n💡 ขั้นตอนต่อไป:")
+    print("\n[Tip] ขั้นตอนต่อไป:")
     print("   1. เทรน model ด้วยข้อมูลใหม่")
     print("      python train_simple.py")
     print("   2. หรือเลือก timeframe เฉพาะ:")

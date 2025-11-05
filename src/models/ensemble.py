@@ -70,7 +70,7 @@ class EnsembleModel:
         model_file = Path(model_path)
 
         if not model_file.exists():
-            print(f"❌ Model not found: {model_file}")
+            print(f"[Error] Model not found: {model_file}")
             return False
 
         try:
@@ -78,11 +78,11 @@ class EnsembleModel:
                 model = pickle.load(f)
 
             self.models[model_name] = model
-            print(f"✅ Loaded: {model_name} from {model_file.name}")
+            print(f"[OK] Loaded: {model_name} from {model_file.name}")
             return True
 
         except Exception as e:
-            print(f"❌ Error loading {model_name}: {e}")
+            print(f"[Error] Error loading {model_name}: {e}")
             return False
 
     def create_voting_ensemble(
@@ -98,11 +98,11 @@ class EnsembleModel:
             weights: Optional weights for each model
         """
         print("\n" + "=" * 80)
-        print(f"🎯 CREATING ENSEMBLE MODEL (voting={voting})")
+        print(f"[Target] CREATING ENSEMBLE MODEL (voting={voting})")
         print("=" * 80)
 
         if len(self.models) < 2:
-            print("❌ Need at least 2 models for ensemble")
+            print("[Error] Need at least 2 models for ensemble")
             return
 
         # Prepare estimators list for VotingClassifier
@@ -122,7 +122,7 @@ class EnsembleModel:
             n_jobs=-1,
         )
 
-        print(f"\n✅ Ensemble created with {len(estimators)} models")
+        print(f"\n[OK] Ensemble created with {len(estimators)} models")
         print(f"   Voting type: {voting}")
         if weights:
             print(f"   Weights: {weights}")
@@ -135,12 +135,12 @@ class EnsembleModel:
         This just fits the VotingClassifier wrapper.
         """
         if self.ensemble is None:
-            print("❌ Create ensemble first using create_voting_ensemble()")
+            print("[Error] Create ensemble first using create_voting_ensemble()")
             return
 
-        print("\n🔧 Fitting ensemble...")
+        print("\n[Feature Engineering] Fitting ensemble...")
         self.ensemble.fit(X_train, y_train)
-        print("✅ Ensemble fitted!")
+        print("[OK] Ensemble fitted!")
 
     def evaluate_ensemble(
         self,
@@ -158,7 +158,7 @@ class EnsembleModel:
             Dictionary with metrics for all sets
         """
         print("\n" + "=" * 80)
-        print("📊 ENSEMBLE EVALUATION")
+        print("[Stats] ENSEMBLE EVALUATION")
         print("=" * 80)
 
         results = {}
@@ -276,7 +276,7 @@ class EnsembleModel:
     def save_ensemble(self, filename: str = "ensemble_model.pkl"):
         """Save ensemble model."""
         if self.ensemble is None:
-            print("❌ No ensemble to save")
+            print("[Error] No ensemble to save")
             return
 
         model_file = self.output_dir / filename
@@ -284,7 +284,7 @@ class EnsembleModel:
         with open(model_file, "wb") as f:
             pickle.dump(self.ensemble, f)
 
-        print(f"\n💾 Ensemble saved: {model_file}")
+        print(f"\n[Save] Ensemble saved: {model_file}")
 
         # Save metadata
         metadata = {
@@ -301,20 +301,20 @@ class EnsembleModel:
         with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"✅ Metadata saved: {metadata_file.name}")
+        print(f"[OK] Metadata saved: {metadata_file.name}")
 
     def load_ensemble(self, filename: str = "ensemble_model.pkl") -> bool:
         """Load ensemble model."""
         model_file = self.output_dir / filename
 
         if not model_file.exists():
-            print(f"❌ Ensemble not found: {model_file}")
+            print(f"[Error] Ensemble not found: {model_file}")
             return False
 
         with open(model_file, "rb") as f:
             self.ensemble = pickle.load(f)
 
-        print(f"✅ Ensemble loaded: {model_file}")
+        print(f"[OK] Ensemble loaded: {model_file}")
         return True
 
 
@@ -322,7 +322,7 @@ def main():
     """Main ensemble creation and evaluation pipeline."""
 
     print("=" * 80)
-    print("🎯 ENSEMBLE MODEL CREATION - AI GOLD BOT")
+    print("[Target] ENSEMBLE MODEL CREATION - AI GOLD BOT")
     print("=" * 80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
@@ -352,15 +352,15 @@ def main():
 
     # Check files
     if not data_file.exists():
-        print(f"❌ Data file not found: {data_file}")
+        print(f"[Error] Data file not found: {data_file}")
         return
 
     if not xgboost_model.exists():
-        print(f"❌ XGBoost model not found: {xgboost_model}")
+        print(f"[Error] XGBoost model not found: {xgboost_model}")
         return
 
     if not rf_model.exists():
-        print(f"❌ Random Forest model not found: {rf_model}")
+        print(f"[Error] Random Forest model not found: {rf_model}")
         return
 
     # Preprocess data
@@ -411,7 +411,7 @@ def main():
     # Save comparison
     comparison_file = ensemble.output_dir / "model_comparison.csv"
     comparison_df.to_csv(comparison_file, index=False)
-    print(f"\n✅ Comparison saved: {comparison_file.name}")
+    print(f"\n[OK] Comparison saved: {comparison_file.name}")
 
     # Save ensemble
     ensemble.save_ensemble("ensemble_soft_voting.pkl")
@@ -425,11 +425,11 @@ def main():
     print(f"  • ensemble_metadata.json      (Model info)")
     print(f"  • model_comparison.csv        (Performance comparison)")
 
-    print(f"\n📊 Final Performance Summary:")
+    print(f"\n[Stats] Final Performance Summary:")
     print(f"  Ensemble Test Accuracy: {results['test']['metrics']['accuracy']:.4f}")
     print(f"  Ensemble Test ROC-AUC:  {results['test']['metrics']['roc_auc']:.4f}")
 
-    print(f"\n🚀 Next steps:")
+    print(f"\n[Launch] Next steps:")
     print(f"  1. Try weighted voting ensemble")
     print(f"  2. Add LSTM to ensemble")
     print(f"  3. Backtest strategies")

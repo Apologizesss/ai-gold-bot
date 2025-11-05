@@ -81,7 +81,7 @@ class FeaturePipeline:
 
         df = pd.read_csv(filepath)
 
-        print(f"✅ Loaded: {filepath.name}")
+        print(f"[OK] Loaded: {filepath.name}")
         print(f"   Rows: {len(df):,}")
         print(f"   Columns: {len(df.columns)}")
 
@@ -111,26 +111,26 @@ class FeaturePipeline:
         Returns:
             DataFrame with all features added
         """
-        print("\n🔧 Feature Engineering")
+        print("\n[Feature Engineering] Feature Engineering")
         print("=" * 70)
 
         original_cols = len(df.columns)
 
         # Add technical indicators
-        print("\n1️⃣  Technical Indicators")
+        print("\n[1]  Technical Indicators")
         df = self.tech_indicators.add_all_indicators(df)
         tech_cols = len(df.columns)
         self.stats["technical_features"] = tech_cols - original_cols
 
         # Add time features
-        print("\n2️⃣  Time-Based Features")
+        print("\n[2]  Time-Based Features")
         df = self.time_features.add_all_time_features(df)
         time_cols = len(df.columns)
         self.stats["time_features"] = time_cols - tech_cols
 
         self.stats["total_features"] = len(df.columns)
 
-        print("\n✅ Feature Engineering Complete!")
+        print("\n[OK] Feature Engineering Complete!")
         print(f"   Original features: {original_cols}")
         print(f"   Technical features: {self.stats['technical_features']}")
         print(f"   Time features: {self.stats['time_features']}")
@@ -155,7 +155,7 @@ class FeaturePipeline:
         Returns:
             DataFrame with missing values handled
         """
-        print("\n🔍 Handling Missing Values")
+        print("\n[Search] Handling Missing Values")
         print("=" * 70)
 
         # Count missing values before
@@ -163,10 +163,10 @@ class FeaturePipeline:
         self.stats["missing_values_before"] = missing_before
 
         if missing_before == 0:
-            print("✅ No missing values found!")
+            print("[OK] No missing values found!")
             return df
 
-        print(f"⚠️  Found {missing_before:,} missing values")
+        print(f"[Warning]  Found {missing_before:,} missing values")
 
         # Show columns with missing values
         missing_by_col = df.isnull().sum()
@@ -180,23 +180,23 @@ class FeaturePipeline:
 
         # Apply method
         if method == "forward_fill":
-            print("\n📝 Using forward fill...")
+            print("\n[Note] Using forward fill...")
             df = df.fillna(method="ffill")
             # Fill remaining with backward fill
             df = df.fillna(method="bfill")
 
         elif method == "backward_fill":
-            print("\n📝 Using backward fill...")
+            print("\n[Note] Using backward fill...")
             df = df.fillna(method="bfill")
             # Fill remaining with forward fill
             df = df.fillna(method="ffill")
 
         elif method == "drop":
-            print("\n📝 Dropping rows with missing values...")
+            print("\n[Note] Dropping rows with missing values...")
             df = df.dropna()
 
         elif method == "mean":
-            print("\n📝 Filling with mean (numeric columns only)...")
+            print("\n[Note] Filling with mean (numeric columns only)...")
             numeric_cols = df.select_dtypes(include=[np.number]).columns
             df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
 
@@ -205,14 +205,14 @@ class FeaturePipeline:
         self.stats["missing_values_after"] = missing_after
 
         if missing_after > 0:
-            print(f"\n⚠️  Still {missing_after:,} missing values remaining")
+            print(f"\n[Warning]  Still {missing_after:,} missing values remaining")
             print("   Filling remaining with 0...")
             df = df.fillna(0)
             missing_after = 0
 
         self.stats["processed_rows"] = len(df)
 
-        print(f"\n✅ Missing values handled")
+        print(f"\n[OK] Missing values handled")
         print(f"   Before: {missing_before:,}")
         print(f"   After: {missing_after:,}")
         print(f"   Rows remaining: {len(df):,}")
@@ -264,12 +264,12 @@ class FeaturePipeline:
         is_valid = len(issues) == 0
 
         if is_valid:
-            print("✅ All validation checks passed!")
+            print("[OK] All validation checks passed!")
             print(f"   Rows: {len(df):,}")
             print(f"   Features: {len(df.columns)}")
             print(f"   Date range: {df['timestamp'].min()} to {df['timestamp'].max()}")
         else:
-            print("⚠️  Validation issues found:")
+            print("[Warning]  Validation issues found:")
             for issue in issues:
                 print(f"   - {issue}")
 
@@ -288,7 +288,7 @@ class FeaturePipeline:
         Returns:
             Path to saved file
         """
-        print("\n💾 Saving Processed Data")
+        print("\n[Save] Saving Processed Data")
         print("=" * 70)
 
         if filename is None:
@@ -302,7 +302,7 @@ class FeaturePipeline:
 
         file_size = filepath.stat().st_size / (1024 * 1024)  # MB
 
-        print(f"✅ Saved: {filepath}")
+        print(f"[OK] Saved: {filepath}")
         print(f"   Size: {file_size:.2f} MB")
         print(f"   Rows: {len(df):,}")
         print(f"   Columns: {len(df.columns)}")
@@ -319,7 +319,7 @@ class FeaturePipeline:
         Returns:
             Path to report file
         """
-        print("\n📊 Generating Feature Report")
+        print("\n[Stats] Generating Feature Report")
         print("=" * 70)
 
         report_path = self.output_dir / "feature_report.txt"
@@ -369,7 +369,7 @@ class FeaturePipeline:
             f.write("END OF REPORT\n")
             f.write("=" * 70 + "\n")
 
-        print(f"✅ Report saved: {report_path}")
+        print(f"[OK] Report saved: {report_path}")
 
         return str(report_path)
 
@@ -419,12 +419,12 @@ class FeaturePipeline:
         report_path = self.generate_feature_report(df)
 
         print("\n" + "=" * 70)
-        print("🎉 PIPELINE COMPLETE!")
+        print("[Success] PIPELINE COMPLETE!")
         print("=" * 70)
-        print(f"✅ Input: {input_file}")
-        print(f"✅ Output: {output_path}")
-        print(f"✅ Report: {report_path}")
-        print(f"\n📊 Summary:")
+        print(f"[OK] Input: {input_file}")
+        print(f"[OK] Output: {output_path}")
+        print(f"[OK] Report: {report_path}")
+        print(f"\n[Stats] Summary:")
         print(
             f"   Rows: {self.stats['original_rows']:,} → {self.stats['processed_rows']:,}"
         )
@@ -450,7 +450,7 @@ def main():
     input_file = "data/raw/XAUUSD_M15_20251101_172509.csv"
 
     if not Path(input_file).exists():
-        print(f"❌ Input file not found: {input_file}")
+        print(f"[Error] Input file not found: {input_file}")
         print("Please run: python collect_all_timeframes.py")
         return
 
@@ -462,7 +462,7 @@ def main():
     )
 
     # Show sample
-    print("\n📊 Sample (last 5 rows, selected features):")
+    print("\n[Stats] Sample (last 5 rows, selected features):")
     sample_cols = [
         "timestamp",
         "close",
@@ -476,7 +476,7 @@ def main():
     available_cols = [col for col in sample_cols if col in df.columns]
     print(df[available_cols].tail())
 
-    print("\n✅ Feature Pipeline ready for production!")
+    print("\n[OK] Feature Pipeline ready for production!")
     print("\nNext steps:")
     print("  1. Process all timeframes")
     print("  2. Start model training (Phase 3)")
