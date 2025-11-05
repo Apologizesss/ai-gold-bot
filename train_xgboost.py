@@ -362,11 +362,19 @@ class XGBoostTrainer:
         joblib.dump(self.scaler, scaler_path)
         print(f"  Scaler saved: {scaler_path}")
 
+        # Save feature names (CRITICAL for inference!)
+        feature_names_path = results_dir / "feature_names.txt"
+        with open(feature_names_path, "w") as f:
+            for name in feature_names:
+                f.write(f"{name}\n")
+        print(f"  Feature names saved: {feature_names_path}")
+
         # Save results
         results = {
             "timestamp": datetime.now().isoformat(),
             "data_path": str(self.data_path),
             "n_features": len(feature_names),
+            "feature_names": feature_names,
             "model_params": self.model.get_params(),
             "best_iteration": int(self.model.best_iteration),
             "metrics": metrics,

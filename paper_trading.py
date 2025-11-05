@@ -94,8 +94,8 @@ class PaperTrading:
         if not mt5.initialize():
             raise Exception("Failed to initialize MT5")
 
-        print("✓ MT5 connected")
-        print("✓ Paper trading system ready")
+        print("[OK] MT5 connected")
+        print("[OK] Paper trading system ready")
         print()
 
     def fetch_data(self, bars: int = 300):
@@ -472,7 +472,7 @@ class PaperTrading:
             # Cleanup
             mt5.shutdown()
             print()
-            print("✓ Paper trading stopped")
+            print("[OK] Paper trading stopped")
 
     def save_state(self):
         """
@@ -492,7 +492,7 @@ class PaperTrading:
         with open(state_file, "w") as f:
             json.dump(state, f, indent=2, default=str)
 
-        print(f"✓ State saved: {state_file}")
+        print(f"[OK] State saved: {state_file}")
 
 
 def main():

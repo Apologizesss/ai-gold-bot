@@ -79,6 +79,18 @@ class TradingInference:
         self.scaler = joblib.load(scaler_path)
         print("  [OK] Model loaded")
         print("  [OK] Scaler loaded")
+
+        # Load feature names used during training
+        feature_names_path = Path(model_path).parent / "feature_names.txt"
+        if feature_names_path.exists():
+            with open(feature_names_path, "r") as f:
+                self.training_features = [line.strip() for line in f if line.strip()]
+            print(f"  [OK] Loaded {len(self.training_features)} training feature names")
+        else:
+            print(
+                "  [WARNING] No feature_names.txt found - will use all numeric features"
+            )
+            self.training_features = None
         print()
 
         # Initialize feature pipeline for consistent features
@@ -116,7 +128,7 @@ class TradingInference:
 
             mt5.shutdown()
 
-            print(f"✓ Fetched {len(df)} bars from MT5")
+            print(f"[OK] Fetched {len(df)} bars from MT5")
             print(f"  Latest: {df.iloc[-1]['time']}")
             return df
 
@@ -205,32 +217,32 @@ class TradingInference:
         )
         if training_file.exists():
             # Load training columns to match exactly
-            training_df = pd.read_csv(training_file, nrows=1)
-            training_numeric = training_df.select_dtypes(
-                include=[np.number]
-            ).columns.tolist()
-            feature_cols = [c for c in training_numeric if c != "target"]
+            # Now select features to match training
+            if self.training_features is not None:
+                # Use exact features from training
+                feature_cols = self.training_features
 
-            # Extract only these columns from inference data
-            available_cols = [c for c in feature_cols if c in df.columns]
-            missing_cols = [c for c in feature_cols if c not in df.columns]
+                # Check for missing columns
+                available_cols = [c for c in feature_cols if c in df.columns]
+                missing_cols = [c for c in feature_cols if c not in df.columns]
 
-            if missing_cols:
-                print(f"  WARNING: Missing {len(missing_cols)} training columns")
-                # Fill missing columns with 0
-                for col in missing_cols:
-                    df[col] = 0
-                available_cols = feature_cols
+                if missing_cols:
+                    print(f"  WARNING: Missing {len(missing_cols)} training columns")
+                    print(f"  First 5 missing: {missing_cols[:5]}")
+                    # Fill missing columns with 0
+                    for col in missing_cols:
+                        df[col] = 0
+                    available_cols = feature_cols
 
-            feature_cols = available_cols
-        else:
-            # Fallback: exclude known metadata columns
-            exclude_cols = [
-                "target",
-                "time",  # MT5 timestamp (numeric but not a feature)
-            ]
-            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-            feature_cols = [col for col in numeric_cols if col not in exclude_cols]
+                feature_cols = available_cols
+            else:
+                # Fallback: exclude known metadata columns
+                exclude_cols = [
+                    "target",
+                    "time",  # MT5 timestamp (numeric but not a feature)
+                ]
+                numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+                feature_cols = [col for col in numeric_cols if col not in exclude_cols]
 
         if len(feature_cols) == 0:
             print("ERROR: No feature columns found!")
@@ -438,7 +450,7 @@ class TradingInference:
         features = self.prepare_features_for_prediction(df)
         if features is None:
             return None
-        print("  ✓ Features ready")
+        print("  [OK] Features ready")
         print()
 
         # Make prediction
@@ -480,7 +492,7 @@ class TradingInference:
         print()
 
         if signal["should_trade"]:
-            print("✓ TRADE RECOMMENDATION:")
+            print("[OK] TRADE RECOMMENDATION:")
             print("-" * 70)
             print(f"Entry:       {signal['entry_price']:.2f}")
             print(f"Stop Loss:   {signal['stop_loss']:.2f}")
